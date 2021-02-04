@@ -1,0 +1,35 @@
+#+TITLE: Supercritical Pulverized Coal Power Plant: Simulation using IDAES Framework
+
+
+Short description of the supercritical plant simulation example. 
+
+
+* Introduction
+Paragraph 1. Description of the supercritical plant and the units 
+from IDAES framework that will be used.
+
+Include figure of the flowsheet.
+
+Paragraph 2. Description of the units and their connection(s) in the 
+flowsheet (IDAES arcs).
+
+
+* Case Study 
+Paragraph 1. Description of the case study.
+
+Include table with the data used in the example:
+| Variable | Value |
+|----------+-------|
+|          |       |
+|----------+-------|
+
+
+** Assumptions
+Paragraph 1. These assumptions are coming from the commented areas 
+in the model.
+
+* Results
+Paragraph 1. Short explanation of the results.
+
+Include pfd with all the results.
+
