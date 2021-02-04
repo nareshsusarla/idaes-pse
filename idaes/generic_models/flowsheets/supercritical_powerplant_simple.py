@@ -53,6 +53,7 @@ import idaes.logger as idaeslog
 # Import Property Packages (IAPWS95 for Water/Steam)
 from idaes.generic_models.properties import iapws95
 
+# Imports to print results in process flow diagram
 import os
 from collections import OrderedDict
 from pyomo.common.fileutils import this_file_dir
