@@ -1779,7 +1779,7 @@ def build_plant_model(initialize_from_file=None, store_initialization=None):
     )
 
     
-    #   Plant Power Out = Turbine Power - Power required for HX Pump
+    # Plant Power Out = Turbine Power - Power required for HX Pump
     @m.fs.Constraint(m.fs.time,
                      doc="Total plant power production in MWe")
     def production_cons(b, t):
@@ -1808,8 +1808,8 @@ def model_analysis(m):
         "halt_on_ampl_error": "yes",
     }
 
-#   Solving the flowsheet and check result
-#   At this time one can make chnages to the model for further analysis
+    # Solving the flowsheet.
+    # At this time, the user can make changes to the model for further analysis
     solver.solve(m, tee=True, symbolic_solver_labels=True)
 
     print('Total Power =', pyo.value(m.fs.plant_power_out[0]))
