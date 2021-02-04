@@ -283,7 +283,7 @@ def create_model():
         }
     )
     
-    # Setting the scaling factors for area and overall_heat_transfer_coefficient
+    # Setting the scaling factors for area and overall heat transfer coefficient
     iscale.set_scaling_factor(m.fs.fwh1.area, 1e-2)
     iscale.set_scaling_factor(m.fs.fwh1.overall_heat_transfer_coefficient, 1e-3)
 
@@ -345,7 +345,7 @@ def create_model():
         }
     )
     
-    # Setting the scaling factor for area and overall_heat_transfer_coefficient
+    # Setting the scaling factor for area and overall heat transfer coefficient
     iscale.set_scaling_factor(m.fs.fwh2.area, 1e-2)
     iscale.set_scaling_factor(m.fs.fwh2.overall_heat_transfer_coefficient, 1e-3)
 
@@ -385,14 +385,11 @@ def create_model():
         }
     )
 
-    # The outlet pressure of FWH3 mixer is equal to the minimum pressure
-    # Since the pressure of mixer inlet 'steam' has the minimum pressure,
-    # the following constraint sets the outlet pressure of FWH3 to be same
-    # as the pressure of the inlet 'steam'
-    @m.fs.fwh3_mix.Constraint(m.fs.time, doc="FWH3 mixer outlet pressure set to the minimum pressure")
+    @m.fs.fwh3_mix.Constraint(m.fs.time, doc="Outlet pressure of FWH3 mixer set to the minimum inlet pressure")
     def fwh3mixer_pressure_constraint(b, t):
         return b.steam_state[t].pressure == b.mixed_state[t].pressure
 
+    
     # FWH3
     m.fs.fwh3 = HeatExchanger(
         default={
@@ -409,13 +406,11 @@ def create_model():
             },
         }
     )
-    # setting the scaling factor for area
+    # Setting the scaling factor for area and overall heat transfer coefficient
     iscale.set_scaling_factor(m.fs.fwh3.area, 1e-2)
-    # setting the scaling factor for overall_heat_transfer_coefficient
-    iscale.set_scaling_factor(
-        m.fs.fwh3.overall_heat_transfer_coefficient, 1e-3)
+    iscale.set_scaling_factor(m.fs.fwh3.overall_heat_transfer_coefficient, 1e-3)
 
-    # Setting the outlet enthalpy of condensate to be same as saturated liquid
+    
     @m.fs.fwh3.Constraint(m.fs.time, doc="Outlet enthalpy of FWH3 condensate as saturated liquid")
     def fwh3_vaporfrac_constraint(b, t):
         return (
@@ -423,18 +418,17 @@ def create_model():
             == b.side_1.properties_out[t].enth_mol_sat_phase['Liq']
         )
 
-    # Setting the outlet pressure of condensate to be 10% more than that of
-    # steam extracted for FWH2, as described in FWH description
-    # 0.64^2 is the pressure ratio for turbine #7 (see set_inputs)
-    @m.fs.fwh3.Constraint(m.fs.time, doc="Outlet pressure of FWH3 condensed steam")
+    # Setting the outlet pressure of condensate as described in (2) in FWH description
+    # with a pressure ratio for turbine 7 equal to 0.64**2 (see set_inputs)
+    @m.fs.fwh3.Constraint(m.fs.time, doc="Outlet pressure of FWH3 condensate")
     def fwh3_s1pdrop_constraint(b, t):
         return (
             b.side_1.properties_out[t].pressure
             == 1.1 * (0.64 ** 2) * b.side_1.properties_in[t].pressure
         )
 
-    # Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
-    @m.fs.fwh3.Constraint(m.fs.time, doc="Pressure of FWH3 feedwater outlet 2")
+    # Setting the outlet pressure of feed water side as described in (1) in FWH description
+    @m.fs.fwh3.Constraint(m.fs.time, doc="Outlet pressure of FWH3 feed water side")
     def fwh3_s2pdrop_constraint(b, t):
         return (
             b.side_2.properties_out[t].pressure
@@ -457,13 +451,11 @@ def create_model():
             },
         }
     )
-    # setting the scaling factor for area
+    # Setting the scaling factor for area and overall heat transfer coefficient
     iscale.set_scaling_factor(m.fs.fwh4.area, 1e-2)
-    # setting the scaling factor for overall_heat_transfer_coefficient
-    iscale.set_scaling_factor(
-        m.fs.fwh4.overall_heat_transfer_coefficient, 1e-3)
+    iscale.set_scaling_factor(m.fs.fwh4.overall_heat_transfer_coefficient, 1e-3)
 
-    # Setting the outlet enthalpy of condensate to be same as saturated liquid
+
     @m.fs.fwh4.Constraint(m.fs.time, doc="Outlet enthalpy of FWH4 condensate as saturated liquid")
     def fwh4_vaporfrac_constraint(b, t):
         return (
@@ -471,18 +463,17 @@ def create_model():
             == b.side_1.properties_out[t].enth_mol_sat_phase['Liq']
         )
 
-    # Setting the outlet pressure of condensate to be 10% more than that of
-    # steam extracted for FWH3, as described in FWH description
-    # 0.64^2 is the pressure ratio for turbine #6 (see set_inputs)
-    @m.fs.fwh4.Constraint(m.fs.time, doc="Outlet pressure of FWH4 condensed steam")
+    # Setting the outlet pressure of condensate as described in (2) in FWH description
+    # with a pressure ratio for turbine 6 equal to 0.64**2 (see set_inputs)
+    @m.fs.fwh4.Constraint(m.fs.time, doc="Outlet pressure of FWH4 condensate")
     def fwh4_s1pdrop_constraint(b, t):
         return (
             b.side_1.properties_out[t].pressure
             == 1.1 * (0.64 ** 2) * b.side_1.properties_in[t].pressure
         )
 
-    # Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
-    @m.fs.fwh4.Constraint(m.fs.time, doc="Pressure of FWH4 feedwater outlet 2")
+    # Setting the outlet pressure of feed water side as described in (1) in FWH description
+    @m.fs.fwh4.Constraint(m.fs.time, doc="Outlet pressure of FWH4 feed water side")
     def fwh4_s2pdrop_constraint(b, t):
         return (
             b.side_2.properties_out[t].pressure
@@ -501,11 +492,7 @@ def create_model():
         }
     )
 
-    # The outlet pressure of deaerator is equal to the minimum pressure
-    # Since the pressure of deaerator inlet 'feedwater' has
-    # the minimum pressure, the following constraint sets the outlet pressure
-    # of deaerator to be same as the pressure of the inlet 'feedwater'
-    @m.fs.fwh5_da.Constraint(m.fs.time, doc="Deaerator outlet pressure set to the minimum pressure")
+    @m.fs.fwh5_da.Constraint(m.fs.time, doc="Outlet pressure of deaerator set to the minimum inlet pressure")
     def fwh5mixer_pressure_constraint(b, t):
         return b.feedwater_state[t].pressure == b.mixed_state[t].pressure
 
@@ -527,8 +514,7 @@ def create_model():
         }
     )
 
-    # The following constraint sets the outlet pressure of steam extracted
-    # for boiler feed water turbine to be same as that of condenser
+    # Outlet pressure of steam extracted for BFPT to be same as that of condenser mixer
     @m.fs.Constraint(m.fs.time, doc="Outlet pressure of BFPT")
     def constraint_out_pressure(b, t):
         return (
@@ -536,11 +522,9 @@ def create_model():
             == b.condenser_mix.mixed_state[t].pressure
         )
 
-    # The following constraint demands that the work done by the
-    # boiler feed water pump is same as that of boiler feed water turbine
-    # Essentially, this says that boiler feed water turbine produces just
-    # enough power to meet the demand of boiler feed water pump
-    @m.fs.Constraint(m.fs.time, doc="Work demanded by BFP is equal to work produced by BFPT")
+    # Boiler feed water turbine produces just enough power to meet the demand of boiler
+    # feed water pump
+    @m.fs.Constraint(m.fs.time, doc="BFPT produced work equal to demanded work by BFP")
     def constraint_bfp_power(b, t):
         return (
             b.bfp.control_volume.work[t] + b.bfpt.control_volume.work[t]
@@ -560,14 +544,11 @@ def create_model():
         }
     )
 
-    # The outlet pressure of FWH6 mixer is equal to the minimum pressure
-    # Since the pressure of mixer inlet 'steam' has the minimum pressure,
-    # the following constraint sets the outlet pressure of FWH6 to be same
-    # as the pressure of the inlet 'steam'
-    @m.fs.fwh6_mix.Constraint(m.fs.time, doc="FWH6 mixer outlet pressure set to the minimum pressure")
+    @m.fs.fwh6_mix.Constraint(m.fs.time, doc="Outlet pressure of FWH6 mixer set to the minimum inlet pressure")
     def fwh6mixer_pressure_constraint(b, t):
         return b.steam_state[t].pressure == b.mixed_state[t].pressure
 
+    
     # FWH6
     m.fs.fwh6 = HeatExchanger(
         default={
@@ -584,13 +565,12 @@ def create_model():
             },
         }
     )
-    # setting the scaling factor for area
-    iscale.set_scaling_factor(m.fs.fwh6.area, 1e-2)
-    # setting the scaling factor for overall_heat_transfer_coefficient
-    iscale.set_scaling_factor(
-        m.fs.fwh6.overall_heat_transfer_coefficient, 1e-3)
 
-    # Setting the outlet enthalpy of condensate to be same as saturated liquid
+    # Setting the scaling factors for area and overall heat transfer coefficient
+    iscale.set_scaling_factor(m.fs.fwh6.area, 1e-2)
+    iscale.set_scaling_factor(m.fs.fwh6.overall_heat_transfer_coefficient, 1e-3)
+
+
     @m.fs.fwh6.Constraint(m.fs.time, doc="Outlet enthalpy of FWH6 condensate as saturated liquid")
     def fwh6_vaporfrac_constraint(b, t):
         return (
@@ -598,24 +578,24 @@ def create_model():
             == b.side_1.properties_out[t].enth_mol_sat_phase['Liq']
         )
 
-    # Setting the outlet pressure of condensate to be 10% more than that of
-    # steam extracted for Deaerator, as described in FWH description
-    # 0.79^6 is the pressure ratio for turbine #4 (see set_inputs)
-    @m.fs.fwh6.Constraint(m.fs.time, doc="Outlet pressure of FWH6 condensed steam")
+    # Setting the outlet pressure of condensate as described in (2) in FWH description
+    # with a pressure ratio for turbine 4 equal to 0.79**6 (see set_inputs)
+    @m.fs.fwh6.Constraint(m.fs.time, doc="Outlet pressure of FWH6 condensate")
     def fwh6_s1pdrop_constraint(b, t):
         return (
             b.side_1.properties_out[t].pressure
             == 1.1 * (0.79 ** 6) * b.side_1.properties_in[t].pressure
         )
 
-    # Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
-    @m.fs.fwh6.Constraint(m.fs.time, doc="Outlet pressure of FWH6 feedwater outlet 2")
+    # Setting the outlet pressure of feed water side as described in (1) in FWH description
+    @m.fs.fwh6.Constraint(m.fs.time, doc="Outlet pressure of FWH6 feed water side")
     def fwh6_s2pdrop_constraint(b, t):
         return (
             b.side_2.properties_out[t].pressure
             == 0.96 * b.side_2.properties_in[t].pressure
         )
 
+    
     # FWH7 Mixer
     m.fs.fwh7_mix = Mixer(
         default={
@@ -626,14 +606,11 @@ def create_model():
         }
     )
 
-    # The outlet pressure of FWH7 mixer is equal to the minimum pressure
-    # Since the pressure of mixer inlet 'steam' has the minimum pressure,
-    # the following constraint sets the outlet pressure of FWH7 to be same
-    # as the pressure of the inlet 'steam'
-    @m.fs.fwh7_mix.Constraint(m.fs.time, doc="FWH7 mixer outlet pressure set to the minimum pressure")
+    @m.fs.fwh7_mix.Constraint(m.fs.time, doc="Outlet pressure of FWH7 mixer set to the minimum inlet pressure")
     def fwh7mixer_pressure_constraint(b, t):
         return b.steam_state[t].pressure == b.mixed_state[t].pressure
 
+    
     # FWH7
     m.fs.fwh7 = HeatExchanger(
         default={
@@ -650,13 +627,12 @@ def create_model():
             },
         }
     )
-    # setting the scaling factor for area
+    
+    # Setting the scaling factors for area and overall heat transfer coefficient
     iscale.set_scaling_factor(m.fs.fwh7.area, 1e-2)
-    # setting the scaling factor for overall_heat_transfer_coefficient
-    iscale.set_scaling_factor(
-        m.fs.fwh7.overall_heat_transfer_coefficient, 1e-3)
+    iscale.set_scaling_factor(m.fs.fwh7.overall_heat_transfer_coefficient, 1e-3)
 
-    # Setting the outlet enthalpy of condensate to be same as saturated liquid
+    
     @m.fs.fwh7.Constraint(m.fs.time, doc="Outlet enthalpy of FWH7 condensate as saturated liquid")
     def fwh7_vaporfrac_constraint(b, t):
         return (
@@ -664,24 +640,24 @@ def create_model():
             == b.side_1.properties_out[t].enth_mol_sat_phase['Liq']
         )
 
-    # Setting the outlet pressure of condensate to be 10% more than that of
-    # steam extracted for FWH6, as described in FWH description
-    # 0.79^4 is the pressure ratio for turbine #3 (see set_inputs)
-    @m.fs.fwh7.Constraint(m.fs.time, doc="Outlet pressure of FWH7 condensed steam")
+    # Setting the outlet pressure of condensate as described in (2) in FWH description
+    # with a pressure ratio for turbine 3 equal to 0.79**2 (see set_inputs)
+    @m.fs.fwh7.Constraint(m.fs.time, doc="Outlet pressure of FWH7 condensate")
     def fwh7_s1pdrop_constraint(b, t):
         return (
             b.side_1.properties_out[t].pressure
             == 1.1 * (0.79 ** 4) * b.side_1.properties_in[t].pressure
         )
 
-    # Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
-    @m.fs.fwh7.Constraint(m.fs.time, doc="Outlet pressure of FWH7 feedwater outlet 2")
+    # Setting the outlet pressure of feed water side as described in (1) in FWH description
+    @m.fs.fwh7.Constraint(m.fs.time, doc="Outlet pressure of FWH7 feed water side")
     def fwh7_s2pdrop_constraint(b, t):
         return (
             b.side_2.properties_out[t].pressure
             == 0.96 * b.side_2.properties_in[t].pressure
         )
 
+    # FWH8
     m.fs.fwh8 = HeatExchanger(
         default={
             "delta_temperature_callback": delta_temperature_underwood_callback,
@@ -697,13 +673,11 @@ def create_model():
             },
         }
     )
-    # setting the scaling factor for area
+    
+    # Setting the scaling factors for area and overall heat transfer coefficient
     iscale.set_scaling_factor(m.fs.fwh8.area, 1e-2)
-    # setting the scaling factor for overall_heat_transfer_coefficient
-    iscale.set_scaling_factor(
-        m.fs.fwh8.overall_heat_transfer_coefficient, 1e-3)
+    iscale.set_scaling_factor(m.fs.fwh8.overall_heat_transfer_coefficient, 1e-3)
 
-    # Setting the outlet enthalpy of condensate to be same as saturated liquid
     @m.fs.fwh8.Constraint(m.fs.time, doc="Outlet enthalpy of FWH8 condensate as saturated liquid")
     def fwh8_vaporfrac_constraint(b, t):
         return (
@@ -711,24 +685,25 @@ def create_model():
             == b.side_1.properties_out[t].enth_mol_sat_phase['Liq']
         )
 
-    # Setting the outlet pressure of condensate to be 10% more than that of
-    # steam extracted for FWH7, as described in FWH description
-    # 0.8^2 is the pressure ratio for turbine #2 (see set_inputs)
-    @m.fs.fwh8.Constraint(m.fs.time, doc="Outlet pressure of FWH8 condensed steam")
+
+    # Setting the outlet pressure of condensate as described in (2) in FWH description
+    # with a pressure ratio for turbine 2 equal to 0.8**2 (see set_inputs)
+    @m.fs.fwh8.Constraint(m.fs.time, doc="Outlet pressure of FWH8 condensate")
     def fwh8_s1pdrop_constraint(b, t):
         return (
             b.side_1.properties_out[t].pressure
             == 1.1 * (0.8 ** 2) * b.side_1.properties_in[t].pressure
         )
 
-    # Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
-    @m.fs.fwh8.Constraint(m.fs.time, doc="Outlet pressure of FWH8 feedwater outlet 2")
+    # Setting the outlet pressure of feed water side as described in (1) in FWH description
+    @m.fs.fwh8.Constraint(m.fs.time, doc="Outlet pressure of FWH8 feed water side")
     def fwh8_s2pdrop_constraint(b, t):
         return (
             b.side_2.properties_out[t].pressure
             == 0.96 * b.side_2.properties_in[t].pressure
         )
 
+    
     ###########################################################################
     #  Turbine outlet splitter constraints                                    #
     ###########################################################################
