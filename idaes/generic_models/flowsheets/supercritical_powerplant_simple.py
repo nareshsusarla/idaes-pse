@@ -710,7 +710,8 @@ def create_model():
     # Equality constraints have been written as following to define
     # the split fractions within the turbine train
 
-    # Turbine 1 Split speration constraints
+    
+    # Turbine 1 split separation constraints
     m.fs.turbine_1.split_fraction = pyo.Var(initialize=0.12812)
 
     @m.fs.turbine_1.Constraint(m.fs.time, doc="Flow from turbine 1 to turbine 2")
@@ -751,7 +752,8 @@ def create_model():
             m.fs.fwh8.inlet_1.enth_mol[t] == b.outlet.enth_mol[t]
         )
 
-    # Turbine 2 Split speration constraints
+
+    # Turbine 2 split separation constraints
     m.fs.turbine_2.split_fraction = pyo.Var(initialize=0.061824)
 
     @m.fs.turbine_2.Constraint(m.fs.time, doc="Flow from turbine 2 to reheater")
@@ -792,7 +794,8 @@ def create_model():
             m.fs.fwh7_mix.steam.enth_mol[t] == b.outlet.enth_mol[t]
         )
 
-    # Turbine 3 Split speration constraints
+    
+    # Turbine 3 split separation constraints
     m.fs.turbine_3.split_fraction = pyo.Var(initialize=0.03815)
 
     @m.fs.turbine_3.Constraint(m.fs.time, doc="Flow from turbine 3 to turbine 4")
@@ -833,7 +836,8 @@ def create_model():
             m.fs.fwh6_mix.steam.enth_mol[t] == b.outlet.enth_mol[t]
         )
 
-    # Turbine 4 Split speration constraints
+    
+    # Turbine 4 split separation constraints
     m.fs.turbine_4.split_fraction1 = pyo.Var(initialize=0.9019)
     m.fs.turbine_4.split_fraction2 = pyo.Var(initialize=0.050331)
 
@@ -895,7 +899,8 @@ def create_model():
             m.fs.bfpt.inlet.enth_mol[t] == b.outlet.enth_mol[t]
         )
 
-    # Turbine 5 Split speration constraints
+
+    # Turbine 5 split separation constraints
     m.fs.turbine_5.split_fraction = pyo.Var(initialize=0.0381443)
 
     @m.fs.turbine_5.Constraint(m.fs.time, doc="Flow from turbine 5 to turbine 6")
@@ -936,7 +941,8 @@ def create_model():
             m.fs.fwh4.inlet_1.enth_mol[t] == b.outlet.enth_mol[t]
         )
 
-    # Turbine 6 Split speration constraints
+    
+    # Turbine 6 split separation constraints
     m.fs.turbine_6.split_fraction = pyo.Var(initialize=0.017535)
 
     @m.fs.turbine_6.Constraint(m.fs.time, doc="Flow from turbine 6 to turbine 7")
@@ -977,7 +983,8 @@ def create_model():
             m.fs.fwh3_mix.steam.enth_mol[t] == b.outlet.enth_mol[t]
         )
 
-    # Turbine 7 Split speration constraints
+
+    # Turbine 7 split separation constraints
     m.fs.turbine_7.split_fraction = pyo.Var(initialize=0.0154)
 
     @m.fs.turbine_7.Constraint(m.fs.time, doc="Flow from turbine 7 to turbine 8")
@@ -1018,7 +1025,8 @@ def create_model():
             m.fs.fwh2_mix.steam.enth_mol[t] == b.outlet.enth_mol[t]
         )
 
-    # Turbine 8 Split speration constraints
+    
+    # Turbine 8 split separation constraints
     m.fs.turbine_8.split_fraction = pyo.Var(initialize=0.00121)
 
     @m.fs.turbine_8.Constraint(m.fs.time, doc="Flow from turbine 8 to turbine 9")
@@ -1058,6 +1066,9 @@ def create_model():
         return (
             m.fs.fwh1_mix.steam.enth_mol[t] == b.outlet.enth_mol[t]
         )
+
+
+
     ###########################################################################
     #  Create the stream Arcs and return the model                            #
     ###########################################################################
