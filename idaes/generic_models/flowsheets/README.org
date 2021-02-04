@@ -1,7 +1,22 @@
 #+TITLE: Supercritical Pulverized Coal Power Plant: Simulation using IDAES Framework
 
 
-Short description of the supercritical plant simulation example. 
+This is a simple power plant model for supercritical coal-fired power plant
+This model uses some of the generic unit models in place of complex
+power generation unit models such as multi-stage turbine and 0D FWH.
+For example, this model uses multiple pressure changers to
+model multi-stage turbine and 0D heat exchangers to model feed water heaters.
+Some of the parameters in the model such as feed water heater areas,
+overall heat transfer coefficient, turbine efficiencies at multiple stages
+have all been estimated in order to closely match with the data in
+NETL baseline report.
+Additional assumptions include using Heater blocks to model main steam boiler,
+reheater, and condenser. Also, the throttle valves at turbine inlet are
+not included in this model.
+The model has 3 degrees of freedom to be specified by the user. These are the
+conditions for main steam: Pressure (Pa), Temperature (K), and Flow (mol/s).
+The default values fixed in the model are from the NETL Baseline report rev4.
+
 
 
 * Introduction
@@ -27,6 +42,18 @@ Include table with the data used in the example:
 ** Assumptions
 Paragraph 1. These assumptions are coming from the commented areas 
 in the model.
+From condenser mixer:
+The outlet pressure of condenser mixer is equal to the minimum pressure
+Since the turbine (#9) outlet (or, mixer inlet 'main') pressure
+has the minimum pressure, the following constraint sets the outlet
+pressure of the condenser mixer to the pressure of the inlet 'main'
+From condenser:
+The condenser is set up as a heater block
+The outlet of condenser is assumed to be a saturated liquid
+The following condensate enthalpy at the outlet of condeser equal to
+that of a saturated liquid at that pressure
+
+    
 
 * Results
 Paragraph 1. Short explanation of the results.
