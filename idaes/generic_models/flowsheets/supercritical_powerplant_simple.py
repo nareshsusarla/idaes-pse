@@ -1282,27 +1282,29 @@ def _create_arcs(m):
 
 def set_model_input(m):
 
-    # Model inputs / fixed variable or parameter values
-    # assumed in this block, unless otherwise stated explicitly,
-    # are either assumed or estimated in order to match the results with
-    # known baseline scenario for supercritical steam cycle
-
-    # These inputs will also fix all necessary inputs to the model
-    # i.e. the degrees of freedom = 0
+    """
+    Model inputs
+    
+    Units:
+    Pressure in Pa 
+    Molar Flow in mol/s
+    Molar Enthalpy in J/mol
+    """
 
     ###########################################################################
-    #  Turbine input                                                          #
+    #  Boiler, Reheater and Turbine input                                     #
     ###########################################################################
-    #  Turbine inlet conditions
-    main_steam_pressure = 24235081.4  # Pa
-    m.fs.boiler.inlet.flow_mol.fix(29111)  # mol/s
+
+    main_steam_pressure = 24235081.4       
+    m.fs.boiler.inlet.flow_mol.fix(29111)  
     m.fs.boiler.outlet.pressure.fix(main_steam_pressure)
 
-    # Reheater section pressure drop assumed based on baseline scenario
-    m.fs.reheater.deltaP.fix(-96526.64)  # Pa
+    # Reheater pressure drop assumed based on baseline scenario
+    m.fs.reheater.deltaP.fix(-96526.64)    
 
-    # The efficiency and pressure ratios of all turbines were assumed
-    # based on results for the baseline scenario
+    # Turbine inlet conditions
+    # The efficiency and pressure ratios of all turbines were assumed based on
+    # results for the baseline scenario
     m.fs.turbine_1.ratioP.fix(0.8**5)
     m.fs.turbine_1.efficiency_isentropic.fix(0.94)
 
@@ -1331,57 +1333,53 @@ def set_model_input(m):
     m.fs.turbine_9.efficiency_isentropic.fix(0.78)
 
     ###########################################################################
-    #  Condenser section                                         #
+    #  Condenser section                                                      #
     ###########################################################################
     m.fs.cond_pump.efficiency_pump.fix(0.80)
     m.fs.cond_pump.deltaP.fix(1e6)
 
     # Make up stream to condenser
-    m.fs.condenser_mix.makeup.flow_mol.value = 1.08002495835536E-12  # mol/s
-    m.fs.condenser_mix.makeup.pressure.fix(103421.4)  # Pa
-    m.fs.condenser_mix.makeup.enth_mol.fix(1131.69204)  # J/mol
+    m.fs.condenser_mix.makeup.flow_mol.value = 1.08002495835536E-12  
+    m.fs.condenser_mix.makeup.pressure.fix(103421.4)  
+    m.fs.condenser_mix.makeup.enth_mol.fix(1131.69204) 
 
     ###########################################################################
     #  Low pressure FWH section inputs                                        #
     ###########################################################################
-    # fwh1
+    # FWH1
     m.fs.fwh1.area.fix(400)
     m.fs.fwh1.overall_heat_transfer_coefficient.fix(2000)
-    # fwh2
+    # FWH2
     m.fs.fwh2.area.fix(300)
     m.fs.fwh2.overall_heat_transfer_coefficient.fix(2900)
-    # fwh3
+    # FWH3
     m.fs.fwh3.area.fix(200)
     m.fs.fwh3.overall_heat_transfer_coefficient.fix(2900)
-    # fwh4
+    # FWH4
     m.fs.fwh4.area.fix(200)
     m.fs.fwh4.overall_heat_transfer_coefficient.fix(2900)
 
     ###########################################################################
     #  Deaerator and boiler feed pump (BFP) Input                             #
     ###########################################################################
-    # Unlike the feedwater heaters the steam extraction flow to the deaerator
-    # is not constrained by the saturated liquid constraint. Thus, the flow
-    # to the deaerator is fixed in this model. The value of this split fraction
-    # is again based on the baseline results
+    # The flow to the deaerator is fixed in this model. The value is based on 
+    # the baseline results
     m.fs.turbine_4.split_fraction2.fix(0.050331)
 
     m.fs.bfp.efficiency_pump.fix(0.80)
-    # BFW Pump pressure is assumed to be 15% more than
-    # the desired main steam (Turbine Inlet) pressure
-    # To account for the pressure drop across Feed water heaters and Boiler
-    m.fs.bfp.outlet.pressure[:].fix(main_steam_pressure * 1.15)  # Pa
+    # BFP pressure is assumed to be 15% more than the main steam pressure
+    m.fs.bfp.outlet.pressure[:].fix(main_steam_pressure * 1.15)  
     m.fs.bfpt.efficiency_isentropic.fix(0.80)
     ###########################################################################
     #  High pressure feedwater heater                                         #
     ###########################################################################
-    # fwh6
+    # FWH6
     m.fs.fwh6.area.fix(600)
     m.fs.fwh6.overall_heat_transfer_coefficient.fix(2900)
-    # fwh7
+    # FWH7
     m.fs.fwh7.area.fix(400)
     m.fs.fwh7.overall_heat_transfer_coefficient.fix(2900)
-    # fwh8
+    # FWH8
     m.fs.fwh8.area.fix(400)
     m.fs.fwh8.overall_heat_transfer_coefficient.fix(2900)
 
