@@ -53,7 +53,119 @@ The outlet of condenser is assumed to be a saturated liquid
 The following condensate enthalpy at the outlet of condeser equal to
 that of a saturated liquid at that pressure
 
-    
+From FWHs:
+Feed water heaters (FWHs) are declared as 0D heat exchangers
+Tube side is for feed water & Shell side is for steam condensing
+Pressure drop on both sides are accounted for by setting the respective
+outlet pressure based on the following assumptions:
+    (1) Feed water side: A constant 4% pressure drop is assumed
+          on the feedwater side for all FWHs. For this,
+          the outlet pressure is set to 0.96 times the inlet pressure,
+          on the feed water side for all FWHs
+    (2) Steam condensing side: Going from high pressure to
+          low pressure FWHs, the outlet pressure of
+          the condensed steam in assumed to be 10% more than that
+          of the pressure of steam extracted for the immediately
+          next lower pressure feedwater heater.
+          e.g. the outlet condensate pressure of FWH 'n'
+          = 1.1 * pressure of steam extracted for FWH 'n-1'
+          In case of FWH1 the FWH 'n-1' is used for Condenser,
+          and in case of FWH6, FWH 'n-1' is for Deaerator. Here,
+          the steam pressure for FWH 'n-1' is known because the
+          pressure ratios for turbines are fixed.
+The condensing steam is assumed to leave the FWH as saturated liquid
+Thus, each FWH is accompanied by 3 constraints, 2 for pressure drop
+and 1 for the enthalpy.
+
+Scaling factors for area and overall heat transfer coefficients for
+FWHs have all been set appropriately (user may change these values,
+if needed) if not set, the scaling factors = 1 (IDAES default)
+
+From FWH1 mixer:
+The outlet pressure of FWH1 mixer is equal to the minimum pressure
+Since the pressure of mixer inlet 'steam' has the minimum pressure,
+the following constraint sets the outlet pressure of FWH1 to be same
+as the pressure of the inlet 'steam'
+
+From FWH1:
+Setting the outlet enthalpy of condensate to be same as saturated liquid
+Setting the outlet pressure of condensate to be 10% more than that of
+steam routed to condenser, as described in FWH description
+0.5 is the pressure ratio for turbine #9 (see set_inputs)
+Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
+
+From FWH2 mixer:
+The outlet pressure of FWH2 mixer is equal to the minimum pressure
+Since the pressure of mixer inlet 'steam' has the minimum pressure,
+the following constraint sets the outlet pressure of FWH2 to be same
+as the pressure of the inlet 'steam'
+
+From FWH2:
+Setting the outlet enthalpy of condensate to be same as saturated liquid
+Setting the outlet pressure of condensate to be 10% more than that of
+steam extracted for FWH1, as described in FWH description
+0.64^2 is the pressure ratio for turbine #8 (see set_inputs)
+Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
+
+From FWH3 mixer:
+The outlet pressure of FWH3 mixer is equal to the minimum pressure
+Since the pressure of mixer inlet 'steam' has the minimum pressure,
+the following constraint sets the outlet pressure of FWH3 to be same
+as the pressure of the inlet 'steam'
+
+From FWH3:
+Setting the outlet enthalpy of condensate to be same as saturated liquid
+Setting the outlet pressure of condensate to be 10% more than that of
+steam extracted for FWH2, as described in FWH description
+0.64^2 is the pressure ratio for turbine #7 (see set_inputs)
+Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
+
+From FWH4:
+Setting the outlet enthalpy of condensate to be same as saturated liquid
+Setting the outlet pressure of condensate to be 10% more than that of
+steam extracted for FWH3, as described in FWH description
+0.64^2 is the pressure ratio for turbine #6 (see set_inputs)
+Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
+
+Deaerator, bfp, and bfpt:
+The outlet pressure of deaerator is equal to the minimum pressure
+Since the pressure of deaerator inlet 'feedwater' has
+the minimum pressure, the following constraint sets the outlet pressure
+of deaerator to be same as the pressure of the inlet 'feedwater'
+The following constraint sets the outlet pressure of steam extracted
+for boiler feed water turbine to be same as that of condenser
+The following constraint demands that the work done by the
+boiler feed water pump is same as that of boiler feed water turbine
+Essentially, this says that boiler feed water turbine produces just
+enough power to meet the demand of boiler feed water pump
+From FWH6 mixer:
+The outlet pressure of FWH6 mixer is equal to the minimum pressure
+Since the pressure of mixer inlet 'steam' has the minimum pressure,
+the following constraint sets the outlet pressure of FWH6 to be same
+as the pressure of the inlet 'steam'
+Fom FWH6:
+Setting the outlet enthalpy of condensate to be same as saturated liquid
+Setting the outlet pressure of condensate to be 10% more than that of
+steam extracted for Deaerator, as described in FWH description
+0.79^6 is the pressure ratio for turbine #4 (see set_inputs)
+Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
+From FWH7 mixer:
+The outlet pressure of FWH7 mixer is equal to the minimum pressure
+Since the pressure of mixer inlet 'steam' has the minimum pressure,
+the following constraint sets the outlet pressure of FWH7 to be same
+as the pressure of the inlet 'steam'
+Setting the outlet enthalpy of condensate to be same as saturated liquid
+Setting the outlet pressure of condensate to be 10% more than that of
+steam extracted for FWH6, as described in FWH description
+0.79^4 is the pressure ratio for turbine #3 (see set_inputs)
+Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
+
+From FWH8:
+Setting the outlet enthalpy of condensate to be same as saturated liquid
+Setting the outlet pressure of condensate to be 10% more than that of
+steam extracted for FWH7, as described in FWH description
+0.8^2 is the pressure ratio for turbine #2 (see set_inputs)
+Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
 
 * Results
 Paragraph 1. Short explanation of the results.
