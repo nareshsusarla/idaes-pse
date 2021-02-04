@@ -464,7 +464,7 @@ def create_model():
             == 0.96 * b.side_2.properties_in[t].pressure
         )
 
-    # fwh4
+    # FWH4
     m.fs.fwh4 = HeatExchanger(
         default={
             "delta_temperature_callback": delta_temperature_underwood_callback,
@@ -1746,31 +1746,39 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
 
 def build_plant_model(initialize_from_file=None, store_initialization=None):
 
+    """
+    Build the plant model
+    """
+
+    
     # Create a flowsheet, add properties, unit models, and arcs
     m = create_model()
 
-    # Give all the required inputs to the model
-    # Ensure that the degrees of freedom = 0 (model is complete)
+    # Give all the required inputs to the model. Ensure that the model
+    # is complete, i.e., the number of degrees of freedom are 0 
     set_model_input(m)
+
     # Assert that the model has no degree of freedom at this point
     assert degrees_of_freedom(m) == 0
 
-    # Initialize the model (sequencial initialization and custom routines)
-    # Ensure after the model is initialized, the degrees of freedom = 0
+    # Initialize the model. Ensure after the model is initialized, that
+    # the number of degrees of freedom is 0
     initialize(m)
+
     assert degrees_of_freedom(m) == 0
 
-    # The power plant with storage for a charge scenario is now ready
-    #  Declaraing a plant power out variable for easy analysis of various
-    #  design and operating scenarios
+    # The power plant model is now ready
+
+    # Declaring a plant power out variable for easy analysis of various
+    # design and operating scenarios
     m.fs.plant_power_out = pyo.Var(
         m.fs.time,
         domain=pyo.Reals,
         initialize=620,
-        doc="Net Power MWe out from the power plant"
+        doc="Net Power from the power plant in MWe"
     )
 
-    #   Constraint on Plant Power Output
+    
     #   Plant Power Out = Turbine Power - Power required for HX Pump
     @m.fs.Constraint(m.fs.time,
                      doc="Total plant power production in MWe")
