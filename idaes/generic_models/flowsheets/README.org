@@ -193,6 +193,22 @@ BFW Pump pressure is assumed to be 15% more than
 the desired main steam (Turbine Inlet) pressure
 To account for the pressure drop across Feed water heaters and Boiler
 
+From initialize:
+initialization routine for the turbine train
+
+Deactivating constraints that fix enthalpy at FWH outlet
+This lets us initialize the model using the fixed split_fractions
+for steam extractions for all the feed water heaters except deaerator
+These split fractions will be unfixed later and the constraints will
+be activated
+
+Model Initialization with Square Problem Solve                         #
+
+Unfix split fractions and activate vapor fraction constraints
+Vaporfrac constraints set condensed steam enthalpy at the condensing
+side outlet to be that of a saturated liquid
+Then solve the square problem again for an initilized model
+
 
 * Results
 Paragraph 1. Short explanation of the results.
