@@ -1395,19 +1395,17 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
         "halt_on_ampl_error": "yes",
     }
 
-    # initializing the boiler
+    # Initializing the boiler
     m.fs.boiler.inlet.pressure.fix(24657896)
     m.fs.boiler.inlet.enth_mol.fix(20004)
     m.fs.boiler.initialize(outlvl=outlvl, optarg=solver.options)
     m.fs.boiler.inlet.pressure.unfix()
     m.fs.boiler.inlet.enth_mol.unfix()
 
-    # initialization routine for the turbine train
-
-    # Deactivating constraints that fix enthalpy at FWH outlet
-    # This lets us initialize the model using the fixed split_fractions
-    # for steam extractions for all the feed water heaters except deaerator
-    # These split fractions will be unfixed later and the constraints will
+    # Initialization routine for the turbine train: deactivating constraints
+    # that fix enthalpy at FWH outlet to initialize the model using the fixed
+    # split_fractions for steam extractions for all the FWHs, except deaerator
+    # Note: the split fractions will be unfixed later and the constraints will
     # be activated
     m.fs.turbine_1.split_fraction.fix(0.12812)
     m.fs.turbine_2.split_fraction.fix(0.061824)
@@ -1427,7 +1425,7 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
     m.fs.fwh7.fwh7_vaporfrac_constraint.deactivate()
     m.fs.fwh8.fwh8_vaporfrac_constraint.deactivate()
 
-    # solving the turbine
+    # Solving the turbine
     _set_port(m.fs.turbine_1.inlet,  m.fs.boiler.outlet)
     m.fs.turbine_1.constraint_turbine1out1_flow.deactivate()
     m.fs.turbine_1.constraint_turbine1out1_pres.deactivate()
@@ -1465,7 +1463,7 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
     m.fs.turbine_2.constraint_turbine2out1_pres.activate()
     m.fs.turbine_2.constraint_turbine2out1_enth.activate()
 
-    # Eenrgy storage splitter outlet 2: Turbine train (Turb 3)
+    # Energy storage splitter outlet 2: Turbine train (Turb 3)
     _set_port(m.fs.turbine_3.inlet, m.fs.reheater.outlet)
     m.fs.turbine_3.constraint_turbine3out1_flow.deactivate()
     m.fs.turbine_3.constraint_turbine3out1_pres.deactivate()
@@ -1577,7 +1575,7 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
     m.fs.turbine_9.inlet.enth_mol[:].value = 43763
     m.fs.turbine_9.initialize(outlvl=outlvl, optarg=solver.options)
 
-    # initialize the boiler feed pump turbine.
+    # Initialize the BFPT
     m.fs.bfpt.inlet.flow_mol.fix(1095)
     m.fs.bfpt.inlet.pressure.fix(472082)
     m.fs.bfpt.inlet.enth_mol.fix(53882)
@@ -1585,7 +1583,7 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
     m.fs.bfpt.inlet.unfix()
 
     ###########################################################################
-    #  Condenser                                                #
+    #  Condenser                                                              #
     ###########################################################################
     _set_port(m.fs.condenser_mix.bfpt, m.fs.bfpt.outlet)
     _set_port(m.fs.condenser_mix.main, m.fs.turbine_9.outlet)
@@ -1659,7 +1657,7 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
     m.fs.fwh4.inlet_1.unfix()
 
     ###########################################################################
-    #  boiler feed pump and deaerator                                         #
+    #  Boiler feed pump and deaerator                                         #
     ###########################################################################
     # Deaerator
     _set_port(m.fs.fwh5_da.feedwater, m.fs.fwh4.outlet_2)
@@ -1675,10 +1673,11 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
     # Boiler feed pump
     _set_port(m.fs.bfp.inlet, m.fs.fwh5_da.outlet)
     m.fs.bfp.initialize(outlvl=outlvl, optarg=solver.options)
+    
     ###########################################################################
     #  High-pressure feedwater heaters                                        #
     ###########################################################################
-    # fwh6
+    # FWH6
     m.fs.fwh6_mix.drain.flow_mol.fix(5299)
     m.fs.fwh6_mix.drain.pressure.fix(2177587)
     m.fs.fwh6_mix.drain.enth_mol.fix(16559)
@@ -1693,7 +1692,7 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
     _set_port(m.fs.fwh6.inlet_2, m.fs.bfp.outlet)
     m.fs.fwh6.initialize(outlvl=outlvl, optarg=solver.options)
 
-    # fwh7
+    # FWH7
     m.fs.fwh7_mix.drain.flow_mol.fix(3730)
     m.fs.fwh7_mix.drain.pressure.fix(5590711)
     m.fs.fwh7_mix.drain.enth_mol.fix(21232)
@@ -1708,7 +1707,7 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
     _set_port(m.fs.fwh7.inlet_2, m.fs.fwh6.outlet_2)
     m.fs.fwh7.initialize(outlvl=outlvl, optarg=solver.options)
 
-    # fwh8
+    # FWH8
     _set_port(m.fs.fwh8.inlet_2, m.fs.fwh7.outlet_2)
     m.fs.fwh8.inlet_1.flow_mol.fix(3730)
     m.fs.fwh8.inlet_1.pressure.fix(7941351)
@@ -1719,10 +1718,8 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
     ###########################################################################
     #  Model Initialization with Square Problem Solve                         #
     ###########################################################################
-    #  Unfix split fractions and activate vapor fraction constraints
-    #  Vaporfrac constraints set condensed steam enthalpy at the condensing
-    #  side outlet to be that of a saturated liquid
-    # Then solve the square problem again for an initilized model
+    # Unfix split fractions and activate vapor fraction constraints and solve
+    # the square problem again for an initialized model
     m.fs.turbine_1.split_fraction.unfix()
     m.fs.turbine_2.split_fraction.unfix()
     m.fs.turbine_3.split_fraction.unfix()
