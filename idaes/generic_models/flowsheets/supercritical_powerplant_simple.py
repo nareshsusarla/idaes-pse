@@ -170,14 +170,16 @@ def create_model():
     )
 
 
-    @m.fs.boiler.Constraint(m.fs.time, doc="Outlet temperature of boiler")
+    @m.fs.boiler.Constraint(m.fs.time,
+                            doc="Outlet temperature of boiler in K")
     def boiler_temperature_constraint(b, t):
-        return b.control_volume.properties_out[t].temperature == 866.15  # K
+        return b.control_volume.properties_out[t].temperature == 866.15 
 
 
-    @m.fs.reheater.Constraint(m.fs.time, doc="Outlet temperature of reheater")
+    @m.fs.reheater.Constraint(m.fs.time,
+                              doc="Outlet temperature of reheater in K")
     def reheater_temperature_constraint(b, t):
-        return b.control_volume.properties_out[t].temperature == 866.15  # K
+        return b.control_volume.properties_out[t].temperature == 866.15 
 
     ###########################################################################
     #  Condenser Mixer, Condenser, and Condensate pump declarations           #
@@ -198,7 +200,9 @@ def create_model():
     )
 
     
-    @m.fs.condenser_mix.Constraint(m.fs.time, doc="Outlet pressure of condenser mixer set to the minimum inlet pressure")
+    @m.fs.condenser_mix.Constraint(m.fs.time,
+                                   doc="Outlet pressure of condenser mixer \
+                                   set to the minimum inlet pressure")
     def mixer_pressure_constraint(b, t):
         return b.main_state[t].pressure == b.mixed_state[t].pressure
 
@@ -213,7 +217,9 @@ def create_model():
         }
     )
 
-    @m.fs.condenser.Constraint(m.fs.time, doc="Outlet enthalpy of condenser as saturated liquid")
+    @m.fs.condenser.Constraint(m.fs.time,
+                               doc="Outlet enthalpy of condenser as saturated \
+                               liquid")
     def cond_vaporfrac_constraint(b, t):
         return (
             b.control_volume.properties_out[t].enth_mol
@@ -266,7 +272,9 @@ def create_model():
         }
     )
 
-    @m.fs.fwh1_mix.Constraint(m.fs.time, doc="Outlet pressure of FWH1 mixer set to the minimum inlet pressure")
+    @m.fs.fwh1_mix.Constraint(m.fs.time,
+                              doc="Outlet pressure of FWH1 mixer \
+                              set to the minimum inlet pressure")
     def fwh1mixer_pressure_constraint(b, t):
         return b.steam_state[t].pressure == b.mixed_state[t].pressure
 
@@ -293,7 +301,9 @@ def create_model():
     iscale.set_scaling_factor(m.fs.fwh1.overall_heat_transfer_coefficient, 1e-3)
 
     
-    @m.fs.fwh1.Constraint(m.fs.time, doc="Outlet enthalpy of FWH1 condensate as saturated liquid")
+    @m.fs.fwh1.Constraint(m.fs.time,
+                          doc="Outlet enthalpy of FWH1 condensate as saturated \
+                          liquid")
     def fwh1_vaporfrac_constraint(b, t):
         return (
             b.side_1.properties_out[t].enth_mol
@@ -302,7 +312,8 @@ def create_model():
 
     # Setting the outlet pressure of condensate as described in (2) in FWH description
     # with a pressure ratio for turbine 9 equal to 0.5 (see set_inputs)
-    @m.fs.fwh1.Constraint(m.fs.time, doc="Outlet pressure of FWH1 condensate")
+    @m.fs.fwh1.Constraint(m.fs.time,
+                          doc="Outlet pressure of FWH1 condensate")
     def fwh1_s1pdrop_constraint(b, t):
         return (
             b.side_1.properties_out[t].pressure
@@ -310,7 +321,8 @@ def create_model():
         )
 
     # Setting the outlet pressure of feed water side as described in (1) in FWH description
-    @m.fs.fwh1.Constraint(m.fs.time, doc="Outlet pressure of FWH1 feed water side")
+    @m.fs.fwh1.Constraint(m.fs.time,
+                          doc="Outlet pressure of FWH1 feed water side")
     def fwh1_s2pdrop_constraint(b, t):
         return (
             b.side_2.properties_out[t].pressure
@@ -328,7 +340,9 @@ def create_model():
         }
     )
 
-    @m.fs.fwh2_mix.Constraint(m.fs.time, doc="Outlet pressure of FWH2 mixer set to the minimum inlet pressure")
+    @m.fs.fwh2_mix.Constraint(m.fs.time,
+                              doc="Outlet pressure of FWH2 mixer \
+                              set to the minimum inlet pressure")
     def fwh2mixer_pressure_constraint(b, t):
         return b.steam_state[t].pressure == b.mixed_state[t].pressure
 
@@ -355,7 +369,9 @@ def create_model():
     iscale.set_scaling_factor(m.fs.fwh2.overall_heat_transfer_coefficient, 1e-3)
 
     
-    @m.fs.fwh2.Constraint(m.fs.time, doc="Outlet enthalpy of FWH2 condensate as saturated liquid")
+    @m.fs.fwh2.Constraint(m.fs.time,
+                          doc="Outlet enthalpy of FWH2 condensate as saturated \
+                          liquid")
     def fwh2_vaporfrac_constraint(b, t):
         return (
             b.side_1.properties_out[t].enth_mol
@@ -364,7 +380,8 @@ def create_model():
 
     # Setting the outlet pressure of condensate as described in (2) in FWH description
     # with a pressure ratio for turbine 8 equal to 0.64**2 (see set_inputs)
-    @m.fs.fwh2.Constraint(m.fs.time, doc="Outlet pressure of FWH2 condensate")
+    @m.fs.fwh2.Constraint(m.fs.time,
+                          doc="Outlet pressure of FWH2 condensate")
     def fwh2_s1pdrop_constraint(b, t):
         return (
             b.side_1.properties_out[t].pressure
@@ -372,7 +389,8 @@ def create_model():
         )
 
     # Setting the outlet pressure of feed water side as described in (1) in FWH description
-    @m.fs.fwh2.Constraint(m.fs.time, doc="Outlet pressure of FWH2 feed water side")
+    @m.fs.fwh2.Constraint(m.fs.time,
+                          doc="Outlet pressure of FWH2 feed water side")
     def fwh2_s2pdrop_constraint(b, t):
         return (
             b.side_2.properties_out[t].pressure
@@ -390,7 +408,9 @@ def create_model():
         }
     )
 
-    @m.fs.fwh3_mix.Constraint(m.fs.time, doc="Outlet pressure of FWH3 mixer set to the minimum inlet pressure")
+    @m.fs.fwh3_mix.Constraint(m.fs.time,
+                              doc="Outlet pressure of FWH3 mixer \
+                              set to the minimum inlet pressure")
     def fwh3mixer_pressure_constraint(b, t):
         return b.steam_state[t].pressure == b.mixed_state[t].pressure
 
@@ -416,7 +436,9 @@ def create_model():
     iscale.set_scaling_factor(m.fs.fwh3.overall_heat_transfer_coefficient, 1e-3)
 
     
-    @m.fs.fwh3.Constraint(m.fs.time, doc="Outlet enthalpy of FWH3 condensate as saturated liquid")
+    @m.fs.fwh3.Constraint(m.fs.time,
+                          doc="Outlet enthalpy of FWH3 condensate as saturated \
+                          liquid")
     def fwh3_vaporfrac_constraint(b, t):
         return (
             b.side_1.properties_out[t].enth_mol
@@ -425,7 +447,8 @@ def create_model():
 
     # Setting the outlet pressure of condensate as described in (2) in FWH description
     # with a pressure ratio for turbine 7 equal to 0.64**2 (see set_inputs)
-    @m.fs.fwh3.Constraint(m.fs.time, doc="Outlet pressure of FWH3 condensate")
+    @m.fs.fwh3.Constraint(m.fs.time,
+                          doc="Outlet pressure of FWH3 condensate")
     def fwh3_s1pdrop_constraint(b, t):
         return (
             b.side_1.properties_out[t].pressure
@@ -433,7 +456,8 @@ def create_model():
         )
 
     # Setting the outlet pressure of feed water side as described in (1) in FWH description
-    @m.fs.fwh3.Constraint(m.fs.time, doc="Outlet pressure of FWH3 feed water side")
+    @m.fs.fwh3.Constraint(m.fs.time,
+                          doc="Outlet pressure of FWH3 feed water side")
     def fwh3_s2pdrop_constraint(b, t):
         return (
             b.side_2.properties_out[t].pressure
@@ -461,7 +485,9 @@ def create_model():
     iscale.set_scaling_factor(m.fs.fwh4.overall_heat_transfer_coefficient, 1e-3)
 
 
-    @m.fs.fwh4.Constraint(m.fs.time, doc="Outlet enthalpy of FWH4 condensate as saturated liquid")
+    @m.fs.fwh4.Constraint(m.fs.time,
+                          doc="Outlet enthalpy of FWH4 condensate as saturated \
+                          liquid")
     def fwh4_vaporfrac_constraint(b, t):
         return (
             b.side_1.properties_out[t].enth_mol
@@ -470,7 +496,8 @@ def create_model():
 
     # Setting the outlet pressure of condensate as described in (2) in FWH description
     # with a pressure ratio for turbine 6 equal to 0.64**2 (see set_inputs)
-    @m.fs.fwh4.Constraint(m.fs.time, doc="Outlet pressure of FWH4 condensate")
+    @m.fs.fwh4.Constraint(m.fs.time,
+                          doc="Outlet pressure of FWH4 condensate")
     def fwh4_s1pdrop_constraint(b, t):
         return (
             b.side_1.properties_out[t].pressure
@@ -478,7 +505,8 @@ def create_model():
         )
 
     # Setting the outlet pressure of feed water side as described in (1) in FWH description
-    @m.fs.fwh4.Constraint(m.fs.time, doc="Outlet pressure of FWH4 feed water side")
+    @m.fs.fwh4.Constraint(m.fs.time,
+                          doc="Outlet pressure of FWH4 feed water side")
     def fwh4_s2pdrop_constraint(b, t):
         return (
             b.side_2.properties_out[t].pressure
@@ -497,7 +525,9 @@ def create_model():
         }
     )
 
-    @m.fs.fwh5_da.Constraint(m.fs.time, doc="Outlet pressure of deaerator set to the minimum inlet pressure")
+    @m.fs.fwh5_da.Constraint(m.fs.time,
+                             doc="Outlet pressure of deaerator \
+                             set to the minimum inlet pressure")
     def fwh5mixer_pressure_constraint(b, t):
         return b.feedwater_state[t].pressure == b.mixed_state[t].pressure
 
@@ -520,7 +550,8 @@ def create_model():
     )
 
     # Outlet pressure of steam extracted for BFPT to be same as that of condenser mixer
-    @m.fs.Constraint(m.fs.time, doc="Outlet pressure of BFPT")
+    @m.fs.Constraint(m.fs.time,
+                     doc="Outlet pressure of BFPT")
     def constraint_out_pressure(b, t):
         return (
             b.bfpt.control_volume.properties_out[t].pressure
@@ -529,7 +560,8 @@ def create_model():
 
     # Boiler feed water turbine produces just enough power to meet the demand of boiler
     # feed water pump
-    @m.fs.Constraint(m.fs.time, doc="BFPT produced work equal to demanded work by BFP")
+    @m.fs.Constraint(m.fs.time,
+                     doc="BFPT produced work equal to demanded work by BFP")
     def constraint_bfp_power(b, t):
         return (
             b.bfp.control_volume.work[t] + b.bfpt.control_volume.work[t]
@@ -549,7 +581,9 @@ def create_model():
         }
     )
 
-    @m.fs.fwh6_mix.Constraint(m.fs.time, doc="Outlet pressure of FWH6 mixer set to the minimum inlet pressure")
+    @m.fs.fwh6_mix.Constraint(m.fs.time,
+                              doc="Outlet pressure of FWH6 mixer \
+                              set to the minimum inlet pressure")
     def fwh6mixer_pressure_constraint(b, t):
         return b.steam_state[t].pressure == b.mixed_state[t].pressure
 
@@ -576,7 +610,9 @@ def create_model():
     iscale.set_scaling_factor(m.fs.fwh6.overall_heat_transfer_coefficient, 1e-3)
 
 
-    @m.fs.fwh6.Constraint(m.fs.time, doc="Outlet enthalpy of FWH6 condensate as saturated liquid")
+    @m.fs.fwh6.Constraint(m.fs.time,
+                          doc="Outlet enthalpy of FWH6 condensate as saturated \
+                          liquid")
     def fwh6_vaporfrac_constraint(b, t):
         return (
             b.side_1.properties_out[t].enth_mol
@@ -585,7 +621,8 @@ def create_model():
 
     # Setting the outlet pressure of condensate as described in (2) in FWH description
     # with a pressure ratio for turbine 4 equal to 0.79**6 (see set_inputs)
-    @m.fs.fwh6.Constraint(m.fs.time, doc="Outlet pressure of FWH6 condensate")
+    @m.fs.fwh6.Constraint(m.fs.time,
+                          doc="Outlet pressure of FWH6 condensate")
     def fwh6_s1pdrop_constraint(b, t):
         return (
             b.side_1.properties_out[t].pressure
@@ -593,7 +630,8 @@ def create_model():
         )
 
     # Setting the outlet pressure of feed water side as described in (1) in FWH description
-    @m.fs.fwh6.Constraint(m.fs.time, doc="Outlet pressure of FWH6 feed water side")
+    @m.fs.fwh6.Constraint(m.fs.time,
+                          doc="Outlet pressure of FWH6 feed water side")
     def fwh6_s2pdrop_constraint(b, t):
         return (
             b.side_2.properties_out[t].pressure
@@ -611,7 +649,9 @@ def create_model():
         }
     )
 
-    @m.fs.fwh7_mix.Constraint(m.fs.time, doc="Outlet pressure of FWH7 mixer set to the minimum inlet pressure")
+    @m.fs.fwh7_mix.Constraint(m.fs.time,
+                              doc="Outlet pressure of FWH7 mixer \
+                              set to the minimum inlet pressure")
     def fwh7mixer_pressure_constraint(b, t):
         return b.steam_state[t].pressure == b.mixed_state[t].pressure
 
@@ -638,7 +678,9 @@ def create_model():
     iscale.set_scaling_factor(m.fs.fwh7.overall_heat_transfer_coefficient, 1e-3)
 
     
-    @m.fs.fwh7.Constraint(m.fs.time, doc="Outlet enthalpy of FWH7 condensate as saturated liquid")
+    @m.fs.fwh7.Constraint(m.fs.time,
+                          doc="Outlet enthalpy of FWH7 condensate as saturated \
+                          liquid")
     def fwh7_vaporfrac_constraint(b, t):
         return (
             b.side_1.properties_out[t].enth_mol
@@ -647,7 +689,8 @@ def create_model():
 
     # Setting the outlet pressure of condensate as described in (2) in FWH description
     # with a pressure ratio for turbine 3 equal to 0.79**2 (see set_inputs)
-    @m.fs.fwh7.Constraint(m.fs.time, doc="Outlet pressure of FWH7 condensate")
+    @m.fs.fwh7.Constraint(m.fs.time,
+                          doc="Outlet pressure of FWH7 condensate")
     def fwh7_s1pdrop_constraint(b, t):
         return (
             b.side_1.properties_out[t].pressure
@@ -655,7 +698,8 @@ def create_model():
         )
 
     # Setting the outlet pressure of feed water side as described in (1) in FWH description
-    @m.fs.fwh7.Constraint(m.fs.time, doc="Outlet pressure of FWH7 feed water side")
+    @m.fs.fwh7.Constraint(m.fs.time,
+                          doc="Outlet pressure of FWH7 feed water side")
     def fwh7_s2pdrop_constraint(b, t):
         return (
             b.side_2.properties_out[t].pressure
@@ -683,7 +727,9 @@ def create_model():
     iscale.set_scaling_factor(m.fs.fwh8.area, 1e-2)
     iscale.set_scaling_factor(m.fs.fwh8.overall_heat_transfer_coefficient, 1e-3)
 
-    @m.fs.fwh8.Constraint(m.fs.time, doc="Outlet enthalpy of FWH8 condensate as saturated liquid")
+    @m.fs.fwh8.Constraint(m.fs.time,
+                          doc="Outlet enthalpy of FWH8 condensate as saturated \
+                          liquid")
     def fwh8_vaporfrac_constraint(b, t):
         return (
             b.side_1.properties_out[t].enth_mol
@@ -693,7 +739,8 @@ def create_model():
 
     # Setting the outlet pressure of condensate as described in (2) in FWH description
     # with a pressure ratio for turbine 2 equal to 0.8**2 (see set_inputs)
-    @m.fs.fwh8.Constraint(m.fs.time, doc="Outlet pressure of FWH8 condensate")
+    @m.fs.fwh8.Constraint(m.fs.time,
+                          doc="Outlet pressure of FWH8 condensate")
     def fwh8_s1pdrop_constraint(b, t):
         return (
             b.side_1.properties_out[t].pressure
@@ -701,7 +748,8 @@ def create_model():
         )
 
     # Setting the outlet pressure of feed water side as described in (1) in FWH description
-    @m.fs.fwh8.Constraint(m.fs.time, doc="Outlet pressure of FWH8 feed water side")
+    @m.fs.fwh8.Constraint(m.fs.time,
+                          doc="Outlet pressure of FWH8 feed water side")
     def fwh8_s2pdrop_constraint(b, t):
         return (
             b.side_2.properties_out[t].pressure
@@ -719,39 +767,45 @@ def create_model():
     # Turbine 1 split separation constraints
     m.fs.turbine_1.split_fraction = pyo.Var(initialize=0.12812)
 
-    @m.fs.turbine_1.Constraint(m.fs.time, doc="Flow from turbine 1 to turbine 2")
+    @m.fs.turbine_1.Constraint(m.fs.time,
+                               doc="Flow from turbine 1 to turbine 2")
     def constraint_turbine1out1_flow(b, t):
         return (
             m.fs.turbine_2.inlet.flow_mol[t]
             == (1 - b.split_fraction) * b.outlet.flow_mol[t]
         )
 
-    @m.fs.turbine_1.Constraint(m.fs.time, doc="Inlet pressure of turbine 2")
+    @m.fs.turbine_1.Constraint(m.fs.time,
+                               doc="Inlet pressure of turbine 2")
     def constraint_turbine1out1_pres(b, t):
         return (
             m.fs.turbine_2.inlet.pressure[t] == b.outlet.pressure[t]
         )
 
-    @m.fs.turbine_1.Constraint(m.fs.time, doc="Inlet enthalpy of turbine 2")
+    @m.fs.turbine_1.Constraint(m.fs.time,
+                               doc="Inlet enthalpy of turbine 2")
     def constraint_turbine1out1_enth(b, t):
         return (
             m.fs.turbine_2.inlet.enth_mol[t] == b.outlet.enth_mol[t]
         )
 
-    @m.fs.turbine_1.Constraint(m.fs.time, doc="Flow from turbine 1 to FWH8 inlet 1")
+    @m.fs.turbine_1.Constraint(m.fs.time,
+                               doc="Flow from turbine 1 to FWH8 inlet 1")
     def constraint_turbine1out2_flow(b, t):
         return (
             m.fs.fwh8.inlet_1.flow_mol[t]
             == b.split_fraction * b.outlet.flow_mol[t]
         )
 
-    @m.fs.turbine_1.Constraint(m.fs.time, doc="Inlet pressure of FWH8")
+    @m.fs.turbine_1.Constraint(m.fs.time,
+                               doc="Inlet pressure of FWH8")
     def constraint_turbine1out2_pres(b, t):
         return (
             m.fs.fwh8.inlet_1.pressure[t] == b.outlet.pressure[t]
         )
 
-    @m.fs.turbine_1.Constraint(m.fs.time, doc="Inlet enthalpy of FWH8")
+    @m.fs.turbine_1.Constraint(m.fs.time,
+                               doc="Inlet enthalpy of FWH8")
     def constraint_turbine1out2_enth(b, t):
         return (
             m.fs.fwh8.inlet_1.enth_mol[t] == b.outlet.enth_mol[t]
@@ -761,39 +815,45 @@ def create_model():
     # Turbine 2 split separation constraints
     m.fs.turbine_2.split_fraction = pyo.Var(initialize=0.061824)
 
-    @m.fs.turbine_2.Constraint(m.fs.time, doc="Flow from turbine 2 to reheater")
+    @m.fs.turbine_2.Constraint(m.fs.time,
+                               doc="Flow from turbine 2 to reheater")
     def constraint_turbine2out1_flow(b, t):
         return (
             m.fs.reheater.inlet.flow_mol[t]
             == (1 - b.split_fraction) * b.outlet.flow_mol[t]
         )
 
-    @m.fs.turbine_2.Constraint(m.fs.time, doc="Inlet pressure of reheater")
+    @m.fs.turbine_2.Constraint(m.fs.time,
+                               doc="Inlet pressure of reheater")
     def constraint_turbine2out1_pres(b, t):
         return (
             m.fs.reheater.inlet.pressure[t] == b.outlet.pressure[t]
         )
 
-    @m.fs.turbine_2.Constraint(m.fs.time, doc="Inlet enthalpy of reheater")
+    @m.fs.turbine_2.Constraint(m.fs.time,
+                               doc="Inlet enthalpy of reheater")
     def constraint_turbine2out1_enth(b, t):
         return (
             m.fs.reheater.inlet.enth_mol[t] == b.outlet.enth_mol[t]
         )
 
-    @m.fs.turbine_2.Constraint(m.fs.time, doc="Flow from turbine 2 to FWH7 mixer")
+    @m.fs.turbine_2.Constraint(m.fs.time,
+                               doc="Flow from turbine 2 to FWH7 mixer")
     def constraint_turbine2out2_flow(b, t):
         return (
             m.fs.fwh7_mix.steam.flow_mol[t]
             == b.split_fraction * b.outlet.flow_mol[t]
         )
 
-    @m.fs.turbine_2.Constraint(m.fs.time, doc="Inlet pressure of FWH7 mixer")
+    @m.fs.turbine_2.Constraint(m.fs.time,
+                               doc="Inlet pressure of FWH7 mixer")
     def constraint_turbine2out2_pres(b, t):
         return (
             m.fs.fwh7_mix.steam.pressure[t] == b.outlet.pressure[t]
         )
 
-    @m.fs.turbine_2.Constraint(m.fs.time, doc="Inlet enthalpy of FWH7 mixer")
+    @m.fs.turbine_2.Constraint(m.fs.time,
+                               doc="Inlet enthalpy of FWH7 mixer")
     def constraint_turbine2out2_enth(b, t):
         return (
             m.fs.fwh7_mix.steam.enth_mol[t] == b.outlet.enth_mol[t]
@@ -803,39 +863,45 @@ def create_model():
     # Turbine 3 split separation constraints
     m.fs.turbine_3.split_fraction = pyo.Var(initialize=0.03815)
 
-    @m.fs.turbine_3.Constraint(m.fs.time, doc="Flow from turbine 3 to turbine 4")
+    @m.fs.turbine_3.Constraint(m.fs.time,
+                               doc="Flow from turbine 3 to turbine 4")
     def constraint_turbine3out1_flow(b, t):
         return (
             m.fs.turbine_4.inlet.flow_mol[t]
             == (1 - b.split_fraction) * b.outlet.flow_mol[t]
         )
 
-    @m.fs.turbine_3.Constraint(m.fs.time, doc="Inlet pressure of turbine 4")
+    @m.fs.turbine_3.Constraint(m.fs.time,
+                               doc="Inlet pressure of turbine 4")
     def constraint_turbine3out1_pres(b, t):
         return (
             m.fs.turbine_4.inlet.pressure[t] == b.outlet.pressure[t]
         )
 
-    @m.fs.turbine_3.Constraint(m.fs.time, doc="Inlet enthalpy of turbine 4")
+    @m.fs.turbine_3.Constraint(m.fs.time,
+                               doc="Inlet enthalpy of turbine 4")
     def constraint_turbine3out1_enth(b, t):
         return (
             m.fs.turbine_4.inlet.enth_mol[t] == b.outlet.enth_mol[t]
         )
 
-    @m.fs.turbine_3.Constraint(m.fs.time, doc="Flow from turbine 3 to FWH6 mixer")
+    @m.fs.turbine_3.Constraint(m.fs.time,
+                               doc="Flow from turbine 3 to FWH6 mixer")
     def constraint_turbine3out2_flow(b, t):
         return (
             m.fs.fwh6_mix.steam.flow_mol[t]
             == b.split_fraction * b.outlet.flow_mol[t]
         )
 
-    @m.fs.turbine_3.Constraint(m.fs.time, doc="Inlet pressure of FWH6 mixer")
+    @m.fs.turbine_3.Constraint(m.fs.time,
+                               doc="Inlet pressure of FWH6 mixer")
     def constraint_turbine3out2_pres(b, t):
         return (
             m.fs.fwh6_mix.steam.pressure[t] == b.outlet.pressure[t]
         )
 
-    @m.fs.turbine_3.Constraint(m.fs.time, doc="Inlet enthalpy of FWH6 mixer")
+    @m.fs.turbine_3.Constraint(m.fs.time,
+                               doc="Inlet enthalpy of FWH6 mixer")
     def constraint_turbine3out2_enth(b, t):
         return (
             m.fs.fwh6_mix.steam.enth_mol[t] == b.outlet.enth_mol[t]
@@ -846,45 +912,52 @@ def create_model():
     m.fs.turbine_4.split_fraction1 = pyo.Var(initialize=0.9019)
     m.fs.turbine_4.split_fraction2 = pyo.Var(initialize=0.050331)
 
-    @m.fs.turbine_4.Constraint(m.fs.time, doc="Flow from turbine 4 to turbine 5")
+    @m.fs.turbine_4.Constraint(m.fs.time,
+                               doc="Flow from turbine 4 to turbine 5")
     def constraint_turbine4out1_flow(b, t):
         return (
             m.fs.turbine_5.inlet.flow_mol[t]
             == b.split_fraction1 * b.outlet.flow_mol[t]
         )
 
-    @m.fs.turbine_4.Constraint(m.fs.time, doc="Inlet pressure of turbine 5")
+    @m.fs.turbine_4.Constraint(m.fs.time,
+                               doc="Inlet pressure of turbine 5")
     def constraint_turbine4out1_pres(b, t):
         return (
             m.fs.turbine_5.inlet.pressure[t] == b.outlet.pressure[t]
         )
 
-    @m.fs.turbine_4.Constraint(m.fs.time, doc="Inlet enthalpy of turbine 5")
+    @m.fs.turbine_4.Constraint(m.fs.time,
+                               doc="Inlet enthalpy of turbine 5")
     def constraint_turbine4out1_enth(b, t):
         return (
             m.fs.turbine_5.inlet.enth_mol[t] == b.outlet.enth_mol[t]
         )
 
-    @m.fs.turbine_4.Constraint(m.fs.time, doc="Flow from turbine 4 to deaerator")
+    @m.fs.turbine_4.Constraint(m.fs.time,
+                               doc="Flow from turbine 4 to deaerator")
     def constraint_turbine4out2_flow(b, t):
         return (
             m.fs.fwh5_da.steam.flow_mol[t]
             == b.split_fraction2 * b.outlet.flow_mol[t]
         )
 
-    @m.fs.turbine_4.Constraint(m.fs.time, doc="Inlet pressure of deaerator")
+    @m.fs.turbine_4.Constraint(m.fs.time,
+                               doc="Inlet pressure of deaerator")
     def constraint_turbine4out2_pres(b, t):
         return (
             m.fs.fwh5_da.steam.pressure[t] == b.outlet.pressure[t]
         )
 
-    @m.fs.turbine_4.Constraint(m.fs.time, doc="Inlet enthalpy of deaerator")
+    @m.fs.turbine_4.Constraint(m.fs.time,
+                               doc="Inlet enthalpy of deaerator")
     def constraint_turbine4out2_enth(b, t):
         return (
             m.fs.fwh5_da.steam.enth_mol[t] == b.outlet.enth_mol[t]
         )
 
-    @m.fs.turbine_4.Constraint(m.fs.time, doc="Flow from turbine 4 to BFPT")
+    @m.fs.turbine_4.Constraint(m.fs.time,
+                               doc="Flow from turbine 4 to BFPT")
     def constraint_turbine4out3_flow(b, t):
         return (
             m.fs.bfpt.inlet.flow_mol[t]
@@ -892,13 +965,15 @@ def create_model():
             * b.outlet.flow_mol[t]
         )
 
-    @m.fs.turbine_4.Constraint(m.fs.time, doc="Inlet pressure of BFPT")
+    @m.fs.turbine_4.Constraint(m.fs.time,
+                               doc="Inlet pressure of BFPT")
     def constraint_turbine4out3_pres(b, t):
         return (
             m.fs.bfpt.inlet.pressure[t] == b.outlet.pressure[t]
         )
 
-    @m.fs.turbine_4.Constraint(m.fs.time, doc="Inlet enthalpy of BFPT")
+    @m.fs.turbine_4.Constraint(m.fs.time,
+                               doc="Inlet enthalpy of BFPT")
     def constraint_turbine4out3_enth(b, t):
         return (
             m.fs.bfpt.inlet.enth_mol[t] == b.outlet.enth_mol[t]
@@ -915,32 +990,37 @@ def create_model():
             == (1 - b.split_fraction) * b.outlet.flow_mol[t]
         )
 
-    @m.fs.turbine_5.Constraint(m.fs.time, doc="Inlet pressure of turbine 6")
+    @m.fs.turbine_5.Constraint(m.fs.time,
+                               doc="Inlet pressure of turbine 6")
     def constraint_turbine5out1_pres(b, t):
         return (
             m.fs.turbine_6.inlet.pressure[t] == b.outlet.pressure[t]
         )
 
-    @m.fs.turbine_5.Constraint(m.fs.time, doc="Inlet enthalpy of turbine 6")
+    @m.fs.turbine_5.Constraint(m.fs.time,
+                               doc="Inlet enthalpy of turbine 6")
     def constraint_turbine5out1_enth(b, t):
         return (
             m.fs.turbine_6.inlet.enth_mol[t] == b.outlet.enth_mol[t]
         )
 
-    @m.fs.turbine_5.Constraint(m.fs.time, doc="Flow from turbine 5 to FWH4 inlet 1")
+    @m.fs.turbine_5.Constraint(m.fs.time,
+                               doc="Flow from turbine 5 to FWH4 inlet 1")
     def constraint_turbine5out2_flow(b, t):
         return (
             m.fs.fwh4.inlet_1.flow_mol[t]
             == b.split_fraction * b.outlet.flow_mol[t]
         )
 
-    @m.fs.turbine_5.Constraint(m.fs.time, doc="Inlet pressure of FWH4")
+    @m.fs.turbine_5.Constraint(m.fs.time,
+                               doc="Inlet pressure of FWH4")
     def constraint_turbine5out2_pres(b, t):
         return (
             m.fs.fwh4.inlet_1.pressure[t] == b.outlet.pressure[t]
         )
 
-    @m.fs.turbine_5.Constraint(m.fs.time, doc="Inlet enthalpy of FWH4")
+    @m.fs.turbine_5.Constraint(m.fs.time,
+                               doc="Inlet enthalpy of FWH4")
     def constraint_turbine5out2_enth(b, t):
         return (
             m.fs.fwh4.inlet_1.enth_mol[t] == b.outlet.enth_mol[t]
@@ -950,39 +1030,45 @@ def create_model():
     # Turbine 6 split separation constraints
     m.fs.turbine_6.split_fraction = pyo.Var(initialize=0.017535)
 
-    @m.fs.turbine_6.Constraint(m.fs.time, doc="Flow from turbine 6 to turbine 7")
+    @m.fs.turbine_6.Constraint(m.fs.time,
+                               doc="Flow from turbine 6 to turbine 7")
     def constraint_turbine6out1_flow(b, t):
         return (
             m.fs.turbine_7.inlet.flow_mol[t]
             == (1 - b.split_fraction) * b.outlet.flow_mol[t]
         )
 
-    @m.fs.turbine_6.Constraint(m.fs.time, doc="Inlet pressure of turbine 7")
+    @m.fs.turbine_6.Constraint(m.fs.time,
+                               doc="Inlet pressure of turbine 7")
     def constraint_turbine6out1_pres(b, t):
         return (
             m.fs.turbine_7.inlet.pressure[t] == b.outlet.pressure[t]
         )
 
-    @m.fs.turbine_6.Constraint(m.fs.time, doc="Inlet enthalpy of turbine 7")
+    @m.fs.turbine_6.Constraint(m.fs.time,
+                               doc="Inlet enthalpy of turbine 7")
     def constraint_turbine6out1_enth(b, t):
         return (
             m.fs.turbine_7.inlet.enth_mol[t] == b.outlet.enth_mol[t]
         )
 
-    @m.fs.turbine_6.Constraint(m.fs.time, doc="Flow from turbine 6 to FWH3 mixer")
+    @m.fs.turbine_6.Constraint(m.fs.time,
+                               doc="Flow from turbine 6 to FWH3 mixer")
     def constraint_turbine6out2_flow(b, t):
         return (
             m.fs.fwh3_mix.steam.flow_mol[t]
             == b.split_fraction * b.outlet.flow_mol[t]
         )
 
-    @m.fs.turbine_6.Constraint(m.fs.time, doc="Inlet pressure of FWH3 mixer")
+    @m.fs.turbine_6.Constraint(m.fs.time,
+                               doc="Inlet pressure of FWH3 mixer")
     def constraint_turbine6out2_pres(b, t):
         return (
             m.fs.fwh3_mix.steam.pressure[t] == b.outlet.pressure[t]
         )
 
-    @m.fs.turbine_6.Constraint(m.fs.time, doc="Inlet enthalpy of FWH3 mixer")
+    @m.fs.turbine_6.Constraint(m.fs.time,
+                               doc="Inlet enthalpy of FWH3 mixer")
     def constraint_turbine6out2_enth(b, t):
         return (
             m.fs.fwh3_mix.steam.enth_mol[t] == b.outlet.enth_mol[t]
@@ -992,39 +1078,45 @@ def create_model():
     # Turbine 7 split separation constraints
     m.fs.turbine_7.split_fraction = pyo.Var(initialize=0.0154)
 
-    @m.fs.turbine_7.Constraint(m.fs.time, doc="Flow from turbine 7 to turbine 8")
+    @m.fs.turbine_7.Constraint(m.fs.time,
+                               doc="Flow from turbine 7 to turbine 8")
     def constraint_turbine7out1_flow(b, t):
         return (
             m.fs.turbine_8.inlet.flow_mol[t]
             == (1 - b.split_fraction) * b.outlet.flow_mol[t]
         )
 
-    @m.fs.turbine_7.Constraint(m.fs.time, doc="Inlet pressure of turbine 8")
+    @m.fs.turbine_7.Constraint(m.fs.time,
+                               doc="Inlet pressure of turbine 8")
     def constraint_turbine7out1_pres(b, t):
         return (
             m.fs.turbine_8.inlet.pressure[t] == b.outlet.pressure[t]
         )
 
-    @m.fs.turbine_7.Constraint(m.fs.time, doc="Inlet enthalpy of turbine 8")
+    @m.fs.turbine_7.Constraint(m.fs.time,
+                               doc="Inlet enthalpy of turbine 8")
     def constraint_turbine7out1_enth(b, t):
         return (
             m.fs.turbine_8.inlet.enth_mol[t] == b.outlet.enth_mol[t]
         )
 
-    @m.fs.turbine_7.Constraint(m.fs.time, doc="Flow from turbine 7 to FWH2 mixer")
+    @m.fs.turbine_7.Constraint(m.fs.time,
+                               doc="Flow from turbine 7 to FWH2 mixer")
     def constraint_turbine7out2_flow(b, t):
         return (
             m.fs.fwh2_mix.steam.flow_mol[t]
             == b.split_fraction*b.outlet.flow_mol[t]
         )
 
-    @m.fs.turbine_7.Constraint(m.fs.time, doc="Inlet pressure of FWH2 mixer")
+    @m.fs.turbine_7.Constraint(m.fs.time,
+                               doc="Inlet pressure of FWH2 mixer")
     def constraint_turbine7out2_pres(b, t):
         return (
             m.fs.fwh2_mix.steam.pressure[t] == b.outlet.pressure[t]
         )
 
-    @m.fs.turbine_7.Constraint(m.fs.time, doc="Inlet enthalpy of FWH2 mixer")
+    @m.fs.turbine_7.Constraint(m.fs.time,
+                               doc="Inlet enthalpy of FWH2 mixer")
     def constraint_turbine7out2_enth(b, t):
         return (
             m.fs.fwh2_mix.steam.enth_mol[t] == b.outlet.enth_mol[t]
@@ -1034,39 +1126,45 @@ def create_model():
     # Turbine 8 split separation constraints
     m.fs.turbine_8.split_fraction = pyo.Var(initialize=0.00121)
 
-    @m.fs.turbine_8.Constraint(m.fs.time, doc="Flow from turbine 8 to turbine 9")
+    @m.fs.turbine_8.Constraint(m.fs.time,
+                               doc="Flow from turbine 8 to turbine 9")
     def constraint_turbine8out1_flow(b, t):
         return (
             m.fs.turbine_9.inlet.flow_mol[t]
             == (1 - b.split_fraction) * b.outlet.flow_mol[t]
         )
 
-    @m.fs.turbine_8.Constraint(m.fs.time, doc="Inlet pressure of turbine 9")
+    @m.fs.turbine_8.Constraint(m.fs.time,
+                               doc="Inlet pressure of turbine 9")
     def constraint_turbine8out1_pres(b, t):
         return (
             m.fs.turbine_9.inlet.pressure[t] == b.outlet.pressure[t]
         )
 
-    @m.fs.turbine_8.Constraint(m.fs.time, doc="Inlet enthalpy of turbine 9")
+    @m.fs.turbine_8.Constraint(m.fs.time,
+                               doc="Inlet enthalpy of turbine 9")
     def constraint_turbine8out1_enth(b, t):
         return (
             m.fs.turbine_9.inlet.enth_mol[t] == b.outlet.enth_mol[t]
         )
 
-    @m.fs.turbine_8.Constraint(m.fs.time, doc="Flow from turbine 8 to FWH1 mixer")
+    @m.fs.turbine_8.Constraint(m.fs.time,
+                               doc="Flow from turbine 8 to FWH1 mixer")
     def constraint_turbine8out2_flow(b, t):
         return (
             m.fs.fwh1_mix.steam.flow_mol[t]
             == b.split_fraction * b.outlet.flow_mol[t]
         )
 
-    @m.fs.turbine_8.Constraint(m.fs.time, doc="Inlet pressure of FWH1 mixer")
+    @m.fs.turbine_8.Constraint(m.fs.time,
+                               doc="Inlet pressure of FWH1 mixer")
     def constraint_turbine8out2_pres(b, t):
         return (
             m.fs.fwh1_mix.steam.pressure[t] == b.outlet.pressure[t]
         )
 
-    @m.fs.turbine_8.Constraint(m.fs.time, doc="Inlet enthalpy of FWH1 mixer")
+    @m.fs.turbine_8.Constraint(m.fs.time,
+                               doc="Inlet enthalpy of FWH1 mixer")
     def constraint_turbine8out2_enth(b, t):
         return (
             m.fs.fwh1_mix.steam.enth_mol[t] == b.outlet.enth_mol[t]
@@ -1679,7 +1777,8 @@ def build_plant_model(initialize_from_file=None, store_initialization=None):
 
     #   Constraint on Plant Power Output
     #   Plant Power Out = Turbine Power - Power required for HX Pump
-    @m.fs.Constraint(m.fs.time, doc="Total plant power production in MWe")
+    @m.fs.Constraint(m.fs.time,
+                     doc="Total plant power production in MWe")
     def production_cons(b, t):
         return (
             (-1*(m.fs.turbine_1.work_mechanical[t]
