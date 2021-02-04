@@ -11,25 +11,21 @@
 # at the URL "https://github.com/IDAES/idaes-pse".
 ##############################################################################
 
-"""This is a simple power plant model for supercritical coal-fired power plant
-This model uses some of the generic unit models in place of complex
-power generation unit models such as multi-stage turbine and 0D FWH.
-For example, this model uses multiple pressure changers to
-model multi-stage turbine and 0D heat exchangers to model feed water heaters.
-Some of the parameters in the model such as feed water heater areas,
-overall heat transfer coefficient, turbine efficiencies at multiple stages
-have all been estimated in order to closely match with the data in
-NETL baseline report.
-Additional assumptions include using Heater blocks to model main steam boiler,
-reheater, and condenser. Also, the throttle valves at turbine inlet are
-not included in this model.
-The model has 3 degrees of freedom to be specified by the user. These are the
-conditions for main steam: Pressure (Pa), Temperature (K), and Flow (mol/s).
-The default values fixed in the model are from the NETL Baseline report rev4.
 
-"""
+##############################################################################
+# This is a simple power plant model for supercritical coal-fired power plant. 
+
+# The model has 3 degrees of freedom to be specified by the user: 
+#   1. Pressure in Pascals for main steam
+#   2. Temperature in Kelvins for main steam
+#   3. Flow in mol/s for main steam
+##############################################################################
+
+
 
 __author__ = "Naresh Susarla"
+
+
 
 # Import Pyomo libraries
 import pyomo.environ as pyo
@@ -59,7 +55,8 @@ from idaes.generic_models.properties import iapws95
 
 
 def create_model():
-    """Create flowsheet and add unit models.
+    """
+    Create flowsheet and add unit models.
     """
     ###########################################################################
     #  Flowsheet and Property Package                                         #
@@ -71,7 +68,7 @@ def create_model():
     )
 
     ###########################################################################
-    #   Turbine declarations                                   #
+    #   Turbine declarations                                                  #
     ###########################################################################
     m.fs.turbine_1 = PressureChanger(
         default={
@@ -147,7 +144,7 @@ def create_model():
     )
 
     ###########################################################################
-    #  Boiler section declarations:                                #
+    #  Boiler section declarations                                            #
     ###########################################################################
     # Boiler section is set up using two heater blocks, as following:
     # 1) For the main steam the heater block is named 'boiler'
@@ -167,20 +164,25 @@ def create_model():
         }
     )
 
-    # Outlet temperature of boiler is set to 866.15 K
+
     @m.fs.boiler.Constraint(m.fs.time, doc="Outlet temperature of boiler")
     def boiler_temperature_constraint(b, t):
         return b.control_volume.properties_out[t].temperature == 866.15  # K
 
-    # Outlet temperature of reheater is set to 866.15 K
+
     @m.fs.reheater.Constraint(m.fs.time, doc="Outlet temperature of reheater")
     def reheater_temperature_constraint(b, t):
         return b.control_volume.properties_out[t].temperature == 866.15  # K
 
     ###########################################################################
-    #  Add Condenser Mixer, Condenser, and Condensate pump                    #
+    #  Condenser Mixer, Condenser, and Condensate pump declarations           #
     ###########################################################################
-    # condenser mix
+    # The condenser mixer inlet notation is given below:
+    #   - main refers to main steam coming from the turbine train
+    #   - bfpt refers to steam coming from the boiler feed pump turbine
+    #   - drain refers to condensed steam from the feed water heater 1
+    #   - makeup refers to make up water
+    
     m.fs.condenser_mix = Mixer(
         default={
             "momentum_mixing_type": MomentumMixingType.none,
@@ -190,19 +192,14 @@ def create_model():
         }
     )
 
-    # The inlet 'main' refers to the main steam coming from the turbine train
-    # Inlet 'bfpt' refers to the steam coming from the bolier feed pump turbine
-    # Inlet 'drain' refers to the condensed steam from the feed water heater 1
-    # Inlet 'makeup' refers to the make up water
-    # The outlet pressure of condenser mixer is equal to the minimum pressure
-    # Since the turbine (#9) outlet (or, mixer inlet 'main') pressure
-    # has the minimum pressure, the following constraint sets the outlet
-    # pressure of the condenser mixer to the pressure of the inlet 'main'
-    @m.fs.condenser_mix.Constraint(m.fs.time, doc="Condenser mixer outlet pressure set to the minimum pressure")
+    
+    @m.fs.condenser_mix.Constraint(m.fs.time, doc="Outlet pressure of condenser mixer set to the minimum inlet pressure")
     def mixer_pressure_constraint(b, t):
         return b.main_state[t].pressure == b.mixed_state[t].pressure
 
-    # Condenser is set up as a heater block
+    
+    # The condenser is set up as a heater block and the outlet is assumed
+    # to be a saturated liquid
     m.fs.condenser = Heater(
         default={
             "dynamic": False,
@@ -210,18 +207,15 @@ def create_model():
             "has_pressure_change": False
         }
     )
-    # The outlet of condenser is assumed to be a saturated liquid
-    # The following condensate enthalpy at the outlet of condeser equal to
-    # that of a saturated liquid at that pressure
 
-    @m.fs.condenser.Constraint(m.fs.time, doc="Condenser outlet enthalpy as saturated liquid")
+    @m.fs.condenser.Constraint(m.fs.time, doc="Outlet enthalpy of condenser as saturated liquid")
     def cond_vaporfrac_constraint(b, t):
         return (
             b.control_volume.properties_out[t].enth_mol
             == b.control_volume.properties_out[t].enth_mol_sat_phase['Liq']
         )
 
-    # condensate pump
+    # Condenser pump
     m.fs.cond_pump = PressureChanger(
         default={
             "property_package": m.fs.prop_water,
@@ -229,6 +223,7 @@ def create_model():
             "thermodynamic_assumption": ThermodynamicAssumption.pump,
         }
     )
+    
     ###########################################################################
     #  Feedwater heater declaration                                     #
     ###########################################################################
