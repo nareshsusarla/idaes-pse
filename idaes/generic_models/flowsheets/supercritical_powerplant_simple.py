@@ -1072,25 +1072,30 @@ def create_model():
     ###########################################################################
     #  Create the stream Arcs and return the model                            #
     ###########################################################################
+
     _create_arcs(m)
+
     pyo.TransformationFactory("network.expand_arcs").apply_to(m.fs)
+
+
     return m
 
 
 def _create_arcs(m):
 
-    # boiler to turb
+    # Boiler to turbine 1
     m.fs.boiler_to_turb1 = Arc(
         source=m.fs.boiler.outlet, destination=m.fs.turbine_1.inlet
     )
-    # reheater to turbine
+    # Reheater to turbine 3
     m.fs.reheater_to_turb3 = Arc(
         source=m.fs.reheater.outlet, destination=m.fs.turbine_3.inlet
     )
+    # Turbine 9 to condenser mixer
     m.fs.turb_to_cmix = Arc(
         source=m.fs.turbine_9.outlet, destination=m.fs.condenser_mix.main
     )
-    # condenser to FWHs
+    # Condenser to FWHs
     m.fs.drain_to_cmix = Arc(
         source=m.fs.fwh1.outlet_1, destination=m.fs.condenser_mix.drain
     )
@@ -1106,7 +1111,7 @@ def _create_arcs(m):
     m.fs.pump_to_fwh1 = Arc(
         source=m.fs.cond_pump.outlet, destination=m.fs.fwh1.inlet_2
     )
-    # Mixer to FWHs
+    # Mixers to FWHs
     m.fs.mix1_to_fwh1 = Arc(
         source=m.fs.fwh1_mix.outlet, destination=m.fs.fwh1.inlet_1
     )
@@ -1166,7 +1171,7 @@ def _create_arcs(m):
     m.fs.fwh7_to_fwh8 = Arc(
         source=m.fs.fwh7.outlet_2, destination=m.fs.fwh8.inlet_2
     )
-    # FWH8 to Boiler to Turbine
+    # FWH8 to boiler 
     m.fs.fwh8_to_boiler = Arc(
         source=m.fs.fwh8.outlet_2, destination=m.fs.boiler.inlet
     )
