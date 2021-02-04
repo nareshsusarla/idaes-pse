@@ -1814,6 +1814,7 @@ def model_analysis(m):
 
     print('Total Power =', pyo.value(m.fs.plant_power_out[0]))
 
+    
 def pfd_result(outfile, m):
     tags = {}
     
@@ -2006,13 +2007,8 @@ if __name__ == "__main__":
     m = build_plant_model(initialize_from_file=None,
                           store_initialization=None)
 
-    #  At this point the model has 0 degrees of freedom
-    #  A sensitivity analysis is done by varying the following variables
-    #  1) Boiler feed water flow: m.fs.boiler.inlet.flow_mol[0]
-    #  2) Steam flow to storage: m.fs.ess_split.split_fraction[:,"outlet_2"]
-
-    # User can import the model from build_plant_model for analysis
-    # A sample analysis function is called below
+    # Import the model from build_plant_model for analysis
     model_analysis(m)
 
+    # Print the results in a process flow diagram (pfd)
     pfd_result("scpc_pfd_results.svg", m)
