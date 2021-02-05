@@ -73,78 +73,18 @@ def create_model():
     ###########################################################################
     #   Turbine declarations                                   #
     ###########################################################################
-    m.fs.turbine_1 = PressureChanger(
-        default={
-            "property_package": m.fs.prop_water,
-            "compressor": False,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "thermodynamic_assumption": ThermodynamicAssumption.isentropic,
-        }
-    )
-    m.fs.turbine_2 = PressureChanger(
-        default={
-            "property_package": m.fs.prop_water,
-            "compressor": False,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "thermodynamic_assumption": ThermodynamicAssumption.isentropic,
-        }
-    )
-    m.fs.turbine_3 = PressureChanger(
-        default={
-            "property_package": m.fs.prop_water,
-            "compressor": False,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "thermodynamic_assumption": ThermodynamicAssumption.isentropic,
-        }
-    )
-    m.fs.turbine_4 = PressureChanger(
-        default={
-            "property_package": m.fs.prop_water,
-            "compressor": False,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "thermodynamic_assumption": ThermodynamicAssumption.isentropic,
-        }
-    )
-    m.fs.turbine_5 = PressureChanger(
-        default={
-            "property_package": m.fs.prop_water,
-            "compressor": False,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "thermodynamic_assumption": ThermodynamicAssumption.isentropic,
-        }
-    )
-    m.fs.turbine_6 = PressureChanger(
-        default={
-            "property_package": m.fs.prop_water,
-            "compressor": False,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "thermodynamic_assumption": ThermodynamicAssumption.isentropic,
-        }
-    )
-    m.fs.turbine_7 = PressureChanger(
-        default={
-            "property_package": m.fs.prop_water,
-            "compressor": False,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "thermodynamic_assumption": ThermodynamicAssumption.isentropic,
-        }
-    )
-    m.fs.turbine_8 = PressureChanger(
-        default={
-            "property_package": m.fs.prop_water,
-            "compressor": False,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "thermodynamic_assumption": ThermodynamicAssumption.isentropic,
-        }
-    )
-    m.fs.turbine_9 = PressureChanger(
-        default={
-            "property_package": m.fs.prop_water,
-            "compressor": False,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "thermodynamic_assumption": ThermodynamicAssumption.isentropic,
-        }
-    )
+
+    for i in range(9):
+
+        turbine = PressureChanger(
+            default={
+                "property_package": m.fs.prop_water,
+                "compressor": False,
+                "material_balance_type": MaterialBalanceType.componentTotal,
+                "thermodynamic_assumption": ThermodynamicAssumption.isentropic
+            }
+        )
+        setattr(m.fs, "turbine_" + str(i+1), turbine)
 
     ###########################################################################
     #  Boiler section declarations:                                #
@@ -259,39 +199,88 @@ def create_model():
     # FWHs have all been set appropriately (user may change these values,
     # if needed) if not set, the scaling factors = 1 (IDAES default)
 
-    # FWH1 Mixer
-    m.fs.fwh1_mix = Mixer(
-        default={
-            "momentum_mixing_type": MomentumMixingType.none,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "inlet_list": ["steam", "drain"],
-            "property_package": m.fs.prop_water,
-        }
-    )
+    ###########################################################################
+    # DEFINITION OF FEED WATER HEATERS MIXERS
+    ###########################################################################
+    FWH_Mixers_list = ['fwh1_mix', 'fwh2_mix', 'fwh3_mix', 'fwh6_mix', 'fwh7_mix']
+
+    for i in FWH_Mixers_list:
+        FWH_Mixer = Mixer(
+            default={
+                "momentum_mixing_type": MomentumMixingType.none,
+                "material_balance_type": MaterialBalanceType.componentTotal,
+                "inlet_list": ["steam", "drain"],
+                "property_package": m.fs.prop_water,
+                }
+                )
+        setattr(m.fs, i, FWH_Mixer)
 
     # The outlet pressure of FWH1 mixer is equal to the minimum pressure
     # Since the pressure of mixer inlet 'steam' has the minimum pressure,
     # the following constraint sets the outlet pressure of FWH1 to be same
     # as the pressure of the inlet 'steam'
+
+
     @m.fs.fwh1_mix.Constraint(m.fs.time)
     def fwh1mixer_pressure_constraint(b, t):
         return b.steam_state[t].pressure == b.mixed_state[t].pressure
-    # FWH1
-    m.fs.fwh1 = HeatExchanger(
-        default={
-            "delta_temperature_callback": delta_temperature_underwood_callback,
-            "shell": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-            "tube": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-        }
-    )
+
+    # The outlet pressure of FWH2 mixer is equal to the minimum pressure
+    # Since the pressure of mixer inlet 'steam' has the minimum pressure,
+    # the following constraint sets the outlet pressure of FWH2 to be same
+    # as the pressure of the inlet 'steam'
+    @m.fs.fwh2_mix.Constraint(m.fs.time)
+    def fwh2mixer_pressure_constraint(b, t):
+        return b.steam_state[t].pressure == b.mixed_state[t].pressure
+
+   # The outlet pressure of FWH3 mixer is equal to the minimum pressure
+    # Since the pressure of mixer inlet 'steam' has the minimum pressure,
+    # the following constraint sets the outlet pressure of FWH3 to be same
+    # as the pressure of the inlet 'steam'
+    @m.fs.fwh3_mix.Constraint(m.fs.time)
+    def fwh3mixer_pressure_constraint(b, t):
+        return b.steam_state[t].pressure == b.mixed_state[t].pressure
+
+    # The outlet pressure of FWH6 mixer is equal to the minimum pressure
+    # Since the pressure of mixer inlet 'steam' has the minimum pressure,
+    # the following constraint sets the outlet pressure of FWH6 to be same
+    # as the pressure of the inlet 'steam'
+    @m.fs.fwh6_mix.Constraint(m.fs.time)
+    def fwh6mixer_pressure_constraint(b, t):
+        return b.steam_state[t].pressure == b.mixed_state[t].pressure
+
+    # The outlet pressure of FWH7 mixer is equal to the minimum pressure
+    # Since the pressure of mixer inlet 'steam' has the minimum pressure,
+    # the following constraint sets the outlet pressure of FWH7 to be same
+    # as the pressure of the inlet 'steam'
+    @m.fs.fwh7_mix.Constraint(m.fs.time)
+    def fwh7mixer_pressure_constraint(b, t):
+        return b.steam_state[t].pressure == b.mixed_state[t].pressure
+
+    ###########################################################################
+    # DEFINITION OF FEED WATER HEATERS
+    ###########################################################################
+    FWH_list = ['fwh1', 'fwh2', 'fwh3', 'fwh4', 'fwh6', 'fwh7', 'fwh8']
+
+    for i in FWH_list:
+        FWH = HeatExchanger(
+            default={
+                "delta_temperature_callback": delta_temperature_underwood_callback,
+                "shell": {
+                    "property_package": m.fs.prop_water,
+                    "material_balance_type": MaterialBalanceType.componentTotal,
+                    "has_pressure_change": True,
+                },
+                "tube": {
+                    "property_package": m.fs.prop_water,
+                    "material_balance_type": MaterialBalanceType.componentTotal,
+                    "has_pressure_change": True,
+                },
+            }
+        )
+        setattr(m.fs, i, FWH)
+
+
     # setting the scaling factor for area
     iscale.set_scaling_factor(m.fs.fwh1.area, 1e-2)
     # setting the scaling factor for overall_heat_transfer_coefficient
@@ -324,39 +313,6 @@ def create_model():
             == 0.96 * b.side_2.properties_in[t].pressure
         )
 
-    # FWH2 Mixer
-    m.fs.fwh2_mix = Mixer(
-        default={
-            "momentum_mixing_type": MomentumMixingType.none,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "inlet_list": ["steam", "drain"],
-            "property_package": m.fs.prop_water,
-        }
-    )
-    # The outlet pressure of FWH2 mixer is equal to the minimum pressure
-    # Since the pressure of mixer inlet 'steam' has the minimum pressure,
-    # the following constraint sets the outlet pressure of FWH2 to be same
-    # as the pressure of the inlet 'steam'
-
-    @m.fs.fwh2_mix.Constraint(m.fs.time)
-    def fwh2mixer_pressure_constraint(b, t):
-        return b.steam_state[t].pressure == b.mixed_state[t].pressure
-    # FWH2
-    m.fs.fwh2 = HeatExchanger(
-        default={
-            "delta_temperature_callback": delta_temperature_underwood_callback,
-            "shell": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-            "tube": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-        }
-    )
     # setting the scaling factor for area
     iscale.set_scaling_factor(m.fs.fwh2.area, 1e-2)
     # setting the scaling factor for overall_heat_transfer_coefficient
@@ -389,41 +345,7 @@ def create_model():
             == 0.96 * b.side_2.properties_in[t].pressure
         )
 
-    # FWH3 Mixer
-    m.fs.fwh3_mix = Mixer(
-        default={
-            "momentum_mixing_type": MomentumMixingType.none,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "inlet_list": ["steam", "drain"],
-            "property_package": m.fs.prop_water,
-        }
-    )
-
-    # The outlet pressure of FWH3 mixer is equal to the minimum pressure
-    # Since the pressure of mixer inlet 'steam' has the minimum pressure,
-    # the following constraint sets the outlet pressure of FWH3 to be same
-    # as the pressure of the inlet 'steam'
-    @m.fs.fwh3_mix.Constraint(m.fs.time)
-    def fwh3mixer_pressure_constraint(b, t):
-        return b.steam_state[t].pressure == b.mixed_state[t].pressure
-
-    # FWH3
-    m.fs.fwh3 = HeatExchanger(
-        default={
-            "delta_temperature_callback": delta_temperature_underwood_callback,
-            "shell": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-            "tube": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-        }
-    )
-    # setting the scaling factor for area
+     # setting the scaling factor for area
     iscale.set_scaling_factor(m.fs.fwh3.area, 1e-2)
     # setting the scaling factor for overall_heat_transfer_coefficient
     iscale.set_scaling_factor(
@@ -455,22 +377,6 @@ def create_model():
             == 0.96 * b.side_2.properties_in[t].pressure
         )
 
-    # fwh4
-    m.fs.fwh4 = HeatExchanger(
-        default={
-            "delta_temperature_callback": delta_temperature_underwood_callback,
-            "shell": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-            "tube": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-        }
-    )
     # setting the scaling factor for area
     iscale.set_scaling_factor(m.fs.fwh4.area, 1e-2)
     # setting the scaling factor for overall_heat_transfer_coefficient
@@ -562,40 +468,8 @@ def create_model():
     ###########################################################################
     #  Add high pressure feedwater heaters                                    #
     ###########################################################################
-    # FWH6 Mixer
-    m.fs.fwh6_mix = Mixer(
-        default={
-            "momentum_mixing_type": MomentumMixingType.none,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "inlet_list": ["steam", "drain"],
-            "property_package": m.fs.prop_water,
-        }
-    )
 
-    # The outlet pressure of FWH6 mixer is equal to the minimum pressure
-    # Since the pressure of mixer inlet 'steam' has the minimum pressure,
-    # the following constraint sets the outlet pressure of FWH6 to be same
-    # as the pressure of the inlet 'steam'
-    @m.fs.fwh6_mix.Constraint(m.fs.time)
-    def fwh6mixer_pressure_constraint(b, t):
-        return b.steam_state[t].pressure == b.mixed_state[t].pressure
 
-    # FWH6
-    m.fs.fwh6 = HeatExchanger(
-        default={
-            "delta_temperature_callback": delta_temperature_underwood_callback,
-            "shell": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-            "tube": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-        }
-    )
     # setting the scaling factor for area
     iscale.set_scaling_factor(m.fs.fwh6.area, 1e-2)
     # setting the scaling factor for overall_heat_transfer_coefficient
@@ -628,40 +502,6 @@ def create_model():
             == 0.96 * b.side_2.properties_in[t].pressure
         )
 
-    # FWH7 Mixer
-    m.fs.fwh7_mix = Mixer(
-        default={
-            "momentum_mixing_type": MomentumMixingType.none,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "inlet_list": ["steam", "drain"],
-            "property_package": m.fs.prop_water,
-        }
-    )
-
-    # The outlet pressure of FWH7 mixer is equal to the minimum pressure
-    # Since the pressure of mixer inlet 'steam' has the minimum pressure,
-    # the following constraint sets the outlet pressure of FWH7 to be same
-    # as the pressure of the inlet 'steam'
-    @m.fs.fwh7_mix.Constraint(m.fs.time)
-    def fwh7mixer_pressure_constraint(b, t):
-        return b.steam_state[t].pressure == b.mixed_state[t].pressure
-
-    # FWH7
-    m.fs.fwh7 = HeatExchanger(
-        default={
-            "delta_temperature_callback": delta_temperature_underwood_callback,
-            "shell": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-            "tube": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-        }
-    )
     # setting the scaling factor for area
     iscale.set_scaling_factor(m.fs.fwh7.area, 1e-2)
     # setting the scaling factor for overall_heat_transfer_coefficient
@@ -694,21 +534,6 @@ def create_model():
             == 0.96 * b.side_2.properties_in[t].pressure
         )
 
-    m.fs.fwh8 = HeatExchanger(
-        default={
-            "delta_temperature_callback": delta_temperature_underwood_callback,
-            "shell": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-            "tube": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-        }
-    )
     # setting the scaling factor for area
     iscale.set_scaling_factor(m.fs.fwh8.area, 1e-2)
     # setting the scaling factor for overall_heat_transfer_coefficient
