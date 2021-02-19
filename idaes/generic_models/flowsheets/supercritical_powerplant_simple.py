@@ -46,11 +46,15 @@ from idaes.generic_models.unit_models import (
     PressureChanger,
     MomentumMixingType,
     Heater,
+    Separator
 )
+from idaes.power_generation.unit_models.helm import HelmSplitter
 from idaes.generic_models.unit_models.heat_exchanger import (
     delta_temperature_underwood_callback)
 from idaes.generic_models.unit_models.pressure_changer import (
     ThermodynamicAssumption)
+from idaes.generic_models.unit_models.separator import (
+    SplittingType)
 import idaes.core.util.scaling as iscale
 import idaes.logger as idaeslog
 
@@ -73,78 +77,18 @@ def create_model():
     ###########################################################################
     #   Turbine declarations                                   #
     ###########################################################################
-    m.fs.turbine_1 = PressureChanger(
-        default={
-            "property_package": m.fs.prop_water,
-            "compressor": False,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "thermodynamic_assumption": ThermodynamicAssumption.isentropic,
-        }
-    )
-    m.fs.turbine_2 = PressureChanger(
-        default={
-            "property_package": m.fs.prop_water,
-            "compressor": False,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "thermodynamic_assumption": ThermodynamicAssumption.isentropic,
-        }
-    )
-    m.fs.turbine_3 = PressureChanger(
-        default={
-            "property_package": m.fs.prop_water,
-            "compressor": False,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "thermodynamic_assumption": ThermodynamicAssumption.isentropic,
-        }
-    )
-    m.fs.turbine_4 = PressureChanger(
-        default={
-            "property_package": m.fs.prop_water,
-            "compressor": False,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "thermodynamic_assumption": ThermodynamicAssumption.isentropic,
-        }
-    )
-    m.fs.turbine_5 = PressureChanger(
-        default={
-            "property_package": m.fs.prop_water,
-            "compressor": False,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "thermodynamic_assumption": ThermodynamicAssumption.isentropic,
-        }
-    )
-    m.fs.turbine_6 = PressureChanger(
-        default={
-            "property_package": m.fs.prop_water,
-            "compressor": False,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "thermodynamic_assumption": ThermodynamicAssumption.isentropic,
-        }
-    )
-    m.fs.turbine_7 = PressureChanger(
-        default={
-            "property_package": m.fs.prop_water,
-            "compressor": False,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "thermodynamic_assumption": ThermodynamicAssumption.isentropic,
-        }
-    )
-    m.fs.turbine_8 = PressureChanger(
-        default={
-            "property_package": m.fs.prop_water,
-            "compressor": False,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "thermodynamic_assumption": ThermodynamicAssumption.isentropic,
-        }
-    )
-    m.fs.turbine_9 = PressureChanger(
-        default={
-            "property_package": m.fs.prop_water,
-            "compressor": False,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "thermodynamic_assumption": ThermodynamicAssumption.isentropic,
-        }
-    )
+
+    for i in range(9):
+
+        turbine = PressureChanger(
+            default={
+                "property_package": m.fs.prop_water,
+                "compressor": False,
+                "material_balance_type": MaterialBalanceType.componentTotal,
+                "thermodynamic_assumption": ThermodynamicAssumption.isentropic
+            }
+        )
+        setattr(m.fs, "turbine_" + str(i+1), turbine)
 
     ###########################################################################
     #  Boiler section declarations:                                #
@@ -259,249 +203,121 @@ def create_model():
     # FWHs have all been set appropriately (user may change these values,
     # if needed) if not set, the scaling factors = 1 (IDAES default)
 
-    # FWH1 Mixer
-    m.fs.fwh1_mix = Mixer(
-        default={
-            "momentum_mixing_type": MomentumMixingType.none,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "inlet_list": ["steam", "drain"],
-            "property_package": m.fs.prop_water,
-        }
-    )
+    ###########################################################################
+    # DEFINITION OF FEED WATER HEATERS MIXERS
+    ###########################################################################
+    FWH_Mixers_list = ['fwh1_mix', 'fwh2_mix', 'fwh3_mix', 'fwh6_mix', 'fwh7_mix']
 
-    # The outlet pressure of FWH1 mixer is equal to the minimum pressure
+    for i in FWH_Mixers_list:
+        FWH_Mixer = Mixer(
+            default={
+                "momentum_mixing_type": MomentumMixingType.none,
+                "material_balance_type": MaterialBalanceType.componentTotal,
+                "inlet_list": ["steam", "drain"],
+                "property_package": m.fs.prop_water,
+                }
+                )
+        setattr(m.fs, i, FWH_Mixer)
+
+    ###########################################################################
+    # DEFINITION OF OUTLET PRESSURE OF FEED WATER HEATERS MIXERS
+    ###########################################################################
+
+    # The outlet pressure of an FWH mixer is equal to the minimum pressure
     # Since the pressure of mixer inlet 'steam' has the minimum pressure,
-    # the following constraint sets the outlet pressure of FWH1 to be same
+    # the following constraints set the outlet pressure of FWH mixers to be same
     # as the pressure of the inlet 'steam'
-    @m.fs.fwh1_mix.Constraint(m.fs.time)
-    def fwh1mixer_pressure_constraint(b, t):
-        return b.steam_state[t].pressure == b.mixed_state[t].pressure
-    # FWH1
-    m.fs.fwh1 = HeatExchanger(
-        default={
-            "delta_temperature_callback": delta_temperature_underwood_callback,
-            "shell": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-            "tube": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-        }
-    )
-    # setting the scaling factor for area
-    iscale.set_scaling_factor(m.fs.fwh1.area, 1e-2)
-    # setting the scaling factor for overall_heat_transfer_coefficient
-    iscale.set_scaling_factor(
-        m.fs.fwh1.overall_heat_transfer_coefficient, 1e-3)
 
-    # Setting the outlet enthalpy of condensate to be same as saturated liquid
-    @m.fs.fwh1.Constraint(m.fs.time)
-    def fwh1_vaporfrac_constraint(b, t):
+    def fwhmixer_pressure_constraint(b, t):
+        return b.steam_state[t].pressure == b.mixed_state[t].pressure
+
+    for i in FWH_Mixers_list:
+        setattr(getattr(m.fs, i), "mixer_pressure_constraint", pyo.Constraint(m.fs.config.time, rule=fwhmixer_pressure_constraint))
+
+    ###########################################################################
+    # DEFINITION OF FEED WATER HEATERS
+    ###########################################################################
+    FWH_list = ['fwh1', 'fwh2', 'fwh3', 'fwh4', 'fwh6', 'fwh7', 'fwh8']
+
+    for i in FWH_list:
+        FWH = HeatExchanger(
+            default={
+                "delta_temperature_callback": delta_temperature_underwood_callback,
+                "shell": {
+                    "property_package": m.fs.prop_water,
+                    "material_balance_type": MaterialBalanceType.componentTotal,
+                    "has_pressure_change": True,
+                },
+                "tube": {
+                    "property_package": m.fs.prop_water,
+                    "material_balance_type": MaterialBalanceType.componentTotal,
+                    "has_pressure_change": True,
+                },
+            }
+        )
+        setattr(m.fs, i, FWH)
+
+    ###########################################################################
+    # SETTING SCALING FACTORS FOR AREA AND HEAT TRANSFER COEFFICIENT
+    ###########################################################################
+
+    for i in FWH_list:
+        c = getattr(m.fs, i)
+        iscale.set_scaling_factor(getattr(c, "area"), 1e-2)
+        iscale.set_scaling_factor(getattr(c, "overall_heat_transfer_coefficient"), 1e-3)
+
+    ###########################################################################
+    # Setting the outlet enthalpy of condensate in an FWH to be same as saturated liquid
+    ###########################################################################
+    def fwh_vaporfrac_constraint(b, t):
         return (
             b.side_1.properties_out[t].enth_mol
-            == b.side_1.properties_out[t].enth_mol_sat_phase['Liq']
-        )
+            == b.side_1.properties_out[t].enth_mol_sat_phase['Liq'])
 
+    for i in FWH_list:
+        setattr(getattr(m.fs, i), i + "_vaporfrac_constraint", pyo.Constraint(m.fs.time, rule=fwh_vaporfrac_constraint))
+
+    ###########################################################################
+    # Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
+    ###########################################################################
+
+    def fwh_s2pdrop_constraint(b, t):
+        return (
+            b.side_2.properties_out[t].pressure
+            == 0.96 * b.side_2.properties_in[t].pressure)
+
+    for i in FWH_list:
+        setattr(getattr(m.fs, i), i + "_s2pdrop_constraint", pyo.Constraint(m.fs.time, rule=fwh_s2pdrop_constraint))
+
+    ###########################################################################
     # Setting the outlet pressure of condensate to be 10% more than that of
     # steam routed to condenser, as described in FWH description
-    # 0.5 is the pressure ratio for turbine #9 (see set_inputs)
-    @m.fs.fwh1.Constraint(m.fs.time)
-    def fwh1_s1pdrop_constraint(b, t):
+    ###########################################################################
+    # FWH1: 0.5 is the pressure ratio for turbine #9 (see set_inputs)
+    # FWH2: 0.64^2 is the pressure ratio for turbine #8 (see set_inputs)
+    # FWH3: 0.64^2 is the pressure ratio for turbine #7 (see set_inputs)
+    # FWH4: 0.64^2 is the pressure ratio for turbine #6 (see set_inputs)
+    # FWH6: 0.79^6 is the pressure ratio for turbine #4 (see set_inputs)
+    # FWH7: 0.79^4 is the pressure ratio for turbine #3 (see set_inputs)
+    # FWH8: 0.8^2 is the pressure ratio for turbine #2 (see set_inputs)
+    
+    pressure_ratio_list = {  'fwh1': 0.5,
+                        'fwh2': 0.64**2,
+                        'fwh3': 0.64**2,
+                        'fwh4': 0.64**2,
+                        'fwh6': 0.79**6,
+                        'fwh7': 0.79**4,
+                        'fwh8': 0.8**2}
+    
+    def fwh_s1pdrop_constraint(b, t):
         return (
             b.side_1.properties_out[t].pressure
-            == 1.1 * 0.5 * b.side_1.properties_in[t].pressure
-        )
+            == 1.1 * b.turbine_pressure_ratio * b.side_1.properties_in[t].pressure)
 
-    # Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
-    @m.fs.fwh1.Constraint(m.fs.time)
-    def fwh1_s2pdrop_constraint(b, t):
-        return (
-            b.side_2.properties_out[t].pressure
-            == 0.96 * b.side_2.properties_in[t].pressure
-        )
-
-    # FWH2 Mixer
-    m.fs.fwh2_mix = Mixer(
-        default={
-            "momentum_mixing_type": MomentumMixingType.none,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "inlet_list": ["steam", "drain"],
-            "property_package": m.fs.prop_water,
-        }
-    )
-    # The outlet pressure of FWH2 mixer is equal to the minimum pressure
-    # Since the pressure of mixer inlet 'steam' has the minimum pressure,
-    # the following constraint sets the outlet pressure of FWH2 to be same
-    # as the pressure of the inlet 'steam'
-
-    @m.fs.fwh2_mix.Constraint(m.fs.time)
-    def fwh2mixer_pressure_constraint(b, t):
-        return b.steam_state[t].pressure == b.mixed_state[t].pressure
-    # FWH2
-    m.fs.fwh2 = HeatExchanger(
-        default={
-            "delta_temperature_callback": delta_temperature_underwood_callback,
-            "shell": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-            "tube": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-        }
-    )
-    # setting the scaling factor for area
-    iscale.set_scaling_factor(m.fs.fwh2.area, 1e-2)
-    # setting the scaling factor for overall_heat_transfer_coefficient
-    iscale.set_scaling_factor(
-        m.fs.fwh2.overall_heat_transfer_coefficient, 1e-3)
-
-    # Setting the outlet enthalpy of condensate to be same as saturated liquid
-    @m.fs.fwh2.Constraint(m.fs.time)
-    def fwh2_vaporfrac_constraint(b, t):
-        return (
-            b.side_1.properties_out[t].enth_mol
-            == b.side_1.properties_out[t].enth_mol_sat_phase['Liq']
-        )
-
-    # Setting the outlet pressure of condensate to be 10% more than that of
-    # steam extracted for FWH1, as described in FWH description
-    # 0.64^2 is the pressure ratio for turbine #8 (see set_inputs)
-    @m.fs.fwh2.Constraint(m.fs.time)
-    def fwh2_s1pdrop_constraint(b, t):
-        return (
-            b.side_1.properties_out[t].pressure
-            == 1.1 * (0.64 ** 2) * b.side_1.properties_in[t].pressure
-        )
-
-    # Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
-    @m.fs.fwh2.Constraint(m.fs.time)
-    def fwh2_s2pdrop_constraint(b, t):
-        return (
-            b.side_2.properties_out[t].pressure
-            == 0.96 * b.side_2.properties_in[t].pressure
-        )
-
-    # FWH3 Mixer
-    m.fs.fwh3_mix = Mixer(
-        default={
-            "momentum_mixing_type": MomentumMixingType.none,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "inlet_list": ["steam", "drain"],
-            "property_package": m.fs.prop_water,
-        }
-    )
-
-    # The outlet pressure of FWH3 mixer is equal to the minimum pressure
-    # Since the pressure of mixer inlet 'steam' has the minimum pressure,
-    # the following constraint sets the outlet pressure of FWH3 to be same
-    # as the pressure of the inlet 'steam'
-    @m.fs.fwh3_mix.Constraint(m.fs.time)
-    def fwh3mixer_pressure_constraint(b, t):
-        return b.steam_state[t].pressure == b.mixed_state[t].pressure
-
-    # FWH3
-    m.fs.fwh3 = HeatExchanger(
-        default={
-            "delta_temperature_callback": delta_temperature_underwood_callback,
-            "shell": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-            "tube": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-        }
-    )
-    # setting the scaling factor for area
-    iscale.set_scaling_factor(m.fs.fwh3.area, 1e-2)
-    # setting the scaling factor for overall_heat_transfer_coefficient
-    iscale.set_scaling_factor(
-        m.fs.fwh3.overall_heat_transfer_coefficient, 1e-3)
-
-    # Setting the outlet enthalpy of condensate to be same as saturated liquid
-    @m.fs.fwh3.Constraint(m.fs.time)
-    def fwh3_vaporfrac_constraint(b, t):
-        return (
-            b.side_1.properties_out[t].enth_mol
-            == b.side_1.properties_out[t].enth_mol_sat_phase['Liq']
-        )
-
-    # Setting the outlet pressure of condensate to be 10% more than that of
-    # steam extracted for FWH2, as described in FWH description
-    # 0.64^2 is the pressure ratio for turbine #7 (see set_inputs)
-    @m.fs.fwh3.Constraint(m.fs.time)
-    def fwh3_s1pdrop_constraint(b, t):
-        return (
-            b.side_1.properties_out[t].pressure
-            == 1.1 * (0.64 ** 2) * b.side_1.properties_in[t].pressure
-        )
-
-    # Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
-    @m.fs.fwh3.Constraint(m.fs.time)
-    def fwh3_s2pdrop_constraint(b, t):
-        return (
-            b.side_2.properties_out[t].pressure
-            == 0.96 * b.side_2.properties_in[t].pressure
-        )
-
-    # fwh4
-    m.fs.fwh4 = HeatExchanger(
-        default={
-            "delta_temperature_callback": delta_temperature_underwood_callback,
-            "shell": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-            "tube": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-        }
-    )
-    # setting the scaling factor for area
-    iscale.set_scaling_factor(m.fs.fwh4.area, 1e-2)
-    # setting the scaling factor for overall_heat_transfer_coefficient
-    iscale.set_scaling_factor(
-        m.fs.fwh4.overall_heat_transfer_coefficient, 1e-3)
-
-    # Setting the outlet enthalpy of condensate to be same as saturated liquid
-    @m.fs.fwh4.Constraint(m.fs.time)
-    def fwh4_vaporfrac_constraint(b, t):
-        return (
-            b.side_1.properties_out[t].enth_mol
-            == b.side_1.properties_out[t].enth_mol_sat_phase['Liq']
-        )
-
-    # Setting the outlet pressure of condensate to be 10% more than that of
-    # steam extracted for FWH3, as described in FWH description
-    # 0.64^2 is the pressure ratio for turbine #6 (see set_inputs)
-    @m.fs.fwh4.Constraint(m.fs.time)
-    def fwh4_s1pdrop_constraint(b, t):
-        return (
-            b.side_1.properties_out[t].pressure
-            == 1.1 * (0.64 ** 2) * b.side_1.properties_in[t].pressure
-        )
-
-    # Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
-    @m.fs.fwh4.Constraint(m.fs.time)
-    def fwh4_s2pdrop_constraint(b, t):
-        return (
-            b.side_2.properties_out[t].pressure
-            == 0.96 * b.side_2.properties_in[t].pressure
-        )
+    for i in FWH_list:
+        b = getattr(m.fs, i)
+        b.turbine_pressure_ratio = pyo.Param(initialize = pressure_ratio_list[i])
+        setattr(b, i+"_s1pdrop_constraint", pyo.Constraint(m.fs.config.time, rule=fwh_s1pdrop_constraint))
 
     ###########################################################################
     #  Add deaerator and boiler feed pump (BFP)                               #
@@ -560,541 +376,23 @@ def create_model():
         )
 
     ###########################################################################
-    #  Add high pressure feedwater heaters                                    #
-    ###########################################################################
-    # FWH6 Mixer
-    m.fs.fwh6_mix = Mixer(
-        default={
-            "momentum_mixing_type": MomentumMixingType.none,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "inlet_list": ["steam", "drain"],
-            "property_package": m.fs.prop_water,
-        }
-    )
-
-    # The outlet pressure of FWH6 mixer is equal to the minimum pressure
-    # Since the pressure of mixer inlet 'steam' has the minimum pressure,
-    # the following constraint sets the outlet pressure of FWH6 to be same
-    # as the pressure of the inlet 'steam'
-    @m.fs.fwh6_mix.Constraint(m.fs.time)
-    def fwh6mixer_pressure_constraint(b, t):
-        return b.steam_state[t].pressure == b.mixed_state[t].pressure
-
-    # FWH6
-    m.fs.fwh6 = HeatExchanger(
-        default={
-            "delta_temperature_callback": delta_temperature_underwood_callback,
-            "shell": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-            "tube": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-        }
-    )
-    # setting the scaling factor for area
-    iscale.set_scaling_factor(m.fs.fwh6.area, 1e-2)
-    # setting the scaling factor for overall_heat_transfer_coefficient
-    iscale.set_scaling_factor(
-        m.fs.fwh6.overall_heat_transfer_coefficient, 1e-3)
-
-    # Setting the outlet enthalpy of condensate to be same as saturated liquid
-    @m.fs.fwh6.Constraint(m.fs.time)
-    def fwh6_vaporfrac_constraint(b, t):
-        return (
-            b.side_1.properties_out[t].enth_mol
-            == b.side_1.properties_out[t].enth_mol_sat_phase['Liq']
-        )
-
-    # Setting the outlet pressure of condensate to be 10% more than that of
-    # steam extracted for Deaerator, as described in FWH description
-    # 0.79^6 is the pressure ratio for turbine #4 (see set_inputs)
-    @m.fs.fwh6.Constraint(m.fs.time)
-    def fwh6_s1pdrop_constraint(b, t):
-        return (
-            b.side_1.properties_out[t].pressure
-            == 1.1 * (0.79 ** 6) * b.side_1.properties_in[t].pressure
-        )
-
-    # Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
-    @m.fs.fwh6.Constraint(m.fs.time)
-    def fwh6_s2pdrop_constraint(b, t):
-        return (
-            b.side_2.properties_out[t].pressure
-            == 0.96 * b.side_2.properties_in[t].pressure
-        )
-
-    # FWH7 Mixer
-    m.fs.fwh7_mix = Mixer(
-        default={
-            "momentum_mixing_type": MomentumMixingType.none,
-            "material_balance_type": MaterialBalanceType.componentTotal,
-            "inlet_list": ["steam", "drain"],
-            "property_package": m.fs.prop_water,
-        }
-    )
-
-    # The outlet pressure of FWH7 mixer is equal to the minimum pressure
-    # Since the pressure of mixer inlet 'steam' has the minimum pressure,
-    # the following constraint sets the outlet pressure of FWH7 to be same
-    # as the pressure of the inlet 'steam'
-    @m.fs.fwh7_mix.Constraint(m.fs.time)
-    def fwh7mixer_pressure_constraint(b, t):
-        return b.steam_state[t].pressure == b.mixed_state[t].pressure
-
-    # FWH7
-    m.fs.fwh7 = HeatExchanger(
-        default={
-            "delta_temperature_callback": delta_temperature_underwood_callback,
-            "shell": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-            "tube": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-        }
-    )
-    # setting the scaling factor for area
-    iscale.set_scaling_factor(m.fs.fwh7.area, 1e-2)
-    # setting the scaling factor for overall_heat_transfer_coefficient
-    iscale.set_scaling_factor(
-        m.fs.fwh7.overall_heat_transfer_coefficient, 1e-3)
-
-    # Setting the outlet enthalpy of condensate to be same as saturated liquid
-    @m.fs.fwh7.Constraint(m.fs.time)
-    def fwh7_vaporfrac_constraint(b, t):
-        return (
-            b.side_1.properties_out[t].enth_mol
-            == b.side_1.properties_out[t].enth_mol_sat_phase['Liq']
-        )
-
-    # Setting the outlet pressure of condensate to be 10% more than that of
-    # steam extracted for FWH6, as described in FWH description
-    # 0.79^4 is the pressure ratio for turbine #3 (see set_inputs)
-    @m.fs.fwh7.Constraint(m.fs.time)
-    def fwh7_s1pdrop_constraint(b, t):
-        return (
-            b.side_1.properties_out[t].pressure
-            == 1.1 * (0.79 ** 4) * b.side_1.properties_in[t].pressure
-        )
-
-    # Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
-    @m.fs.fwh7.Constraint(m.fs.time)
-    def fwh7_s2pdrop_constraint(b, t):
-        return (
-            b.side_2.properties_out[t].pressure
-            == 0.96 * b.side_2.properties_in[t].pressure
-        )
-
-    m.fs.fwh8 = HeatExchanger(
-        default={
-            "delta_temperature_callback": delta_temperature_underwood_callback,
-            "shell": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-            "tube": {
-                "property_package": m.fs.prop_water,
-                "material_balance_type": MaterialBalanceType.componentTotal,
-                "has_pressure_change": True,
-            },
-        }
-    )
-    # setting the scaling factor for area
-    iscale.set_scaling_factor(m.fs.fwh8.area, 1e-2)
-    # setting the scaling factor for overall_heat_transfer_coefficient
-    iscale.set_scaling_factor(
-        m.fs.fwh8.overall_heat_transfer_coefficient, 1e-3)
-
-    # Setting the outlet enthalpy of condensate to be same as saturated liquid
-    @m.fs.fwh8.Constraint(m.fs.time)
-    def fwh8_vaporfrac_constraint(b, t):
-        return (
-            b.side_1.properties_out[t].enth_mol
-            == b.side_1.properties_out[t].enth_mol_sat_phase['Liq']
-        )
-
-    # Setting the outlet pressure of condensate to be 10% more than that of
-    # steam extracted for FWH7, as described in FWH description
-    # 0.8^2 is the pressure ratio for turbine #2 (see set_inputs)
-    @m.fs.fwh8.Constraint(m.fs.time)
-    def fwh8_s1pdrop_constraint(b, t):
-        return (
-            b.side_1.properties_out[t].pressure
-            == 1.1 * (0.8 ** 2) * b.side_1.properties_in[t].pressure
-        )
-
-    # Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
-    @m.fs.fwh8.Constraint(m.fs.time)
-    def fwh8_s2pdrop_constraint(b, t):
-        return (
-            b.side_2.properties_out[t].pressure
-            == 0.96 * b.side_2.properties_in[t].pressure
-        )
-
-    ###########################################################################
     #  Turbine outlet splitter constraints                                    #
     ###########################################################################
     # Equality constraints have been written as following to define
     # the split fractions within the turbine train
 
-    # Turbine 1 Split speration constraints
-    m.fs.turbine_1.split_fraction = pyo.Var(initialize=0.12812)
+    splitter_list = ['t1_splitter', 't2_splitter', 't3_splitter', 't5_splitter', 't6_splitter', 't7_splitter', 't8_splitter']
 
-    @m.fs.turbine_1.Constraint(m.fs.time)
-    def constraint_turbine1out1_flow(b, t):
-        return (
-            m.fs.turbine_2.inlet.flow_mol[t]
-            == (1 - b.split_fraction) * b.outlet.flow_mol[t]
-        )
+    for i in splitter_list:
 
-    @m.fs.turbine_1.Constraint(m.fs.time)
-    def constraint_turbine1out1_pres(b, t):
-        return (
-            m.fs.turbine_2.inlet.pressure[t] == b.outlet.pressure[t]
-        )
+        Splitter = HelmSplitter(default={"dynamic": False,
+                                        "property_package": m.fs.prop_water})
+        setattr(m.fs, i, Splitter)
+    
+    m.fs.t4_splitter = HelmSplitter(default={"dynamic": False,
+                                            "property_package": m.fs.prop_water,
+                                            "num_outlets": 3})
 
-    @m.fs.turbine_1.Constraint(m.fs.time)
-    def constraint_turbine1out1_enth(b, t):
-        return (
-            m.fs.turbine_2.inlet.enth_mol[t] == b.outlet.enth_mol[t]
-        )
-
-    @m.fs.turbine_1.Constraint(m.fs.time)
-    def constraint_turbine1out2_flow(b, t):
-        return (
-            m.fs.fwh8.inlet_1.flow_mol[t]
-            == b.split_fraction * b.outlet.flow_mol[t]
-        )
-
-    @m.fs.turbine_1.Constraint(m.fs.time)
-    def constraint_turbine1out2_pres(b, t):
-        return (
-            m.fs.fwh8.inlet_1.pressure[t] == b.outlet.pressure[t]
-        )
-
-    @m.fs.turbine_1.Constraint(m.fs.time)
-    def constraint_turbine1out2_enth(b, t):
-        return (
-            m.fs.fwh8.inlet_1.enth_mol[t] == b.outlet.enth_mol[t]
-        )
-
-    # Turbine 2 Split speration constraints
-    m.fs.turbine_2.split_fraction = pyo.Var(initialize=0.061824)
-
-    @m.fs.turbine_2.Constraint(m.fs.time)
-    def constraint_turbine2out1_flow(b, t):
-        return (
-            m.fs.reheater.inlet.flow_mol[t]
-            == (1 - b.split_fraction) * b.outlet.flow_mol[t]
-        )
-
-    @m.fs.turbine_2.Constraint(m.fs.time)
-    def constraint_turbine2out1_pres(b, t):
-        return (
-            m.fs.reheater.inlet.pressure[t] == b.outlet.pressure[t]
-        )
-
-    @m.fs.turbine_2.Constraint(m.fs.time)
-    def constraint_turbine2out1_enth(b, t):
-        return (
-            m.fs.reheater.inlet.enth_mol[t] == b.outlet.enth_mol[t]
-        )
-
-    @m.fs.turbine_2.Constraint(m.fs.time)
-    def constraint_turbine2out2_flow(b, t):
-        return (
-            m.fs.fwh7_mix.steam.flow_mol[t]
-            == b.split_fraction * b.outlet.flow_mol[t]
-        )
-
-    @m.fs.turbine_2.Constraint(m.fs.time)
-    def constraint_turbine2out2_pres(b, t):
-        return (
-            m.fs.fwh7_mix.steam.pressure[t] == b.outlet.pressure[t]
-        )
-
-    @m.fs.turbine_2.Constraint(m.fs.time)
-    def constraint_turbine2out2_enth(b, t):
-        return (
-            m.fs.fwh7_mix.steam.enth_mol[t] == b.outlet.enth_mol[t]
-        )
-
-    # Turbine 3 Split speration constraints
-    m.fs.turbine_3.split_fraction = pyo.Var(initialize=0.03815)
-
-    @m.fs.turbine_3.Constraint(m.fs.time)
-    def constraint_turbine3out1_flow(b, t):
-        return (
-            m.fs.turbine_4.inlet.flow_mol[t]
-            == (1 - b.split_fraction) * b.outlet.flow_mol[t]
-        )
-
-    @m.fs.turbine_3.Constraint(m.fs.time)
-    def constraint_turbine3out1_pres(b, t):
-        return (
-            m.fs.turbine_4.inlet.pressure[t] == b.outlet.pressure[t]
-        )
-
-    @m.fs.turbine_3.Constraint(m.fs.time)
-    def constraint_turbine3out1_enth(b, t):
-        return (
-            m.fs.turbine_4.inlet.enth_mol[t] == b.outlet.enth_mol[t]
-        )
-
-    @m.fs.turbine_3.Constraint(m.fs.time)
-    def constraint_turbine3out2_flow(b, t):
-        return (
-            m.fs.fwh6_mix.steam.flow_mol[t]
-            == b.split_fraction * b.outlet.flow_mol[t]
-        )
-
-    @m.fs.turbine_3.Constraint(m.fs.time)
-    def constraint_turbine3out2_pres(b, t):
-        return (
-            m.fs.fwh6_mix.steam.pressure[t] == b.outlet.pressure[t]
-        )
-
-    @m.fs.turbine_3.Constraint(m.fs.time)
-    def constraint_turbine3out2_enth(b, t):
-        return (
-            m.fs.fwh6_mix.steam.enth_mol[t] == b.outlet.enth_mol[t]
-        )
-
-    # Turbine 4 Split speration constraints
-    m.fs.turbine_4.split_fraction1 = pyo.Var(initialize=0.9019)
-    m.fs.turbine_4.split_fraction2 = pyo.Var(initialize=0.050331)
-
-    @m.fs.turbine_4.Constraint(m.fs.time)
-    def constraint_turbine4out1_flow(b, t):
-        return (
-            m.fs.turbine_5.inlet.flow_mol[t]
-            == b.split_fraction1 * b.outlet.flow_mol[t]
-        )
-
-    @m.fs.turbine_4.Constraint(m.fs.time)
-    def constraint_turbine4out1_pres(b, t):
-        return (
-            m.fs.turbine_5.inlet.pressure[t] == b.outlet.pressure[t]
-        )
-
-    @m.fs.turbine_4.Constraint(m.fs.time)
-    def constraint_turbine4out1_enth(b, t):
-        return (
-            m.fs.turbine_5.inlet.enth_mol[t] == b.outlet.enth_mol[t]
-        )
-
-    @m.fs.turbine_4.Constraint(m.fs.time)
-    def constraint_turbine4out2_flow(b, t):
-        return (
-            m.fs.fwh5_da.steam.flow_mol[t]
-            == b.split_fraction2 * b.outlet.flow_mol[t]
-        )
-
-    @m.fs.turbine_4.Constraint(m.fs.time)
-    def constraint_turbine4out2_pres(b, t):
-        return (
-            m.fs.fwh5_da.steam.pressure[t] == b.outlet.pressure[t]
-        )
-
-    @m.fs.turbine_4.Constraint(m.fs.time)
-    def constraint_turbine4out2_enth(b, t):
-        return (
-            m.fs.fwh5_da.steam.enth_mol[t] == b.outlet.enth_mol[t]
-        )
-
-    @m.fs.turbine_4.Constraint(m.fs.time)
-    def constraint_turbine4out3_flow(b, t):
-        return (
-            m.fs.bfpt.inlet.flow_mol[t]
-            == (1 - b.split_fraction1 - b.split_fraction2)
-            * b.outlet.flow_mol[t]
-        )
-
-    @m.fs.turbine_4.Constraint(m.fs.time)
-    def constraint_turbine4out3_pres(b, t):
-        return (
-            m.fs.bfpt.inlet.pressure[t] == b.outlet.pressure[t]
-        )
-
-    @m.fs.turbine_4.Constraint(m.fs.time)
-    def constraint_turbine4out3_enth(b, t):
-        return (
-            m.fs.bfpt.inlet.enth_mol[t] == b.outlet.enth_mol[t]
-        )
-
-    # Turbine 5 Split speration constraints
-    m.fs.turbine_5.split_fraction = pyo.Var(initialize=0.0381443)
-
-    @m.fs.turbine_5.Constraint(m.fs.time)
-    def constraint_turbine5out1_flow(b, t):
-        return (
-            m.fs.turbine_6.inlet.flow_mol[t]
-            == (1 - b.split_fraction) * b.outlet.flow_mol[t]
-        )
-
-    @m.fs.turbine_5.Constraint(m.fs.time)
-    def constraint_turbine5out1_pres(b, t):
-        return (
-            m.fs.turbine_6.inlet.pressure[t] == b.outlet.pressure[t]
-        )
-
-    @m.fs.turbine_5.Constraint(m.fs.time)
-    def constraint_turbine5out1_enth(b, t):
-        return (
-            m.fs.turbine_6.inlet.enth_mol[t] == b.outlet.enth_mol[t]
-        )
-
-    @m.fs.turbine_5.Constraint(m.fs.time)
-    def constraint_turbine5out2_flow(b, t):
-        return (
-            m.fs.fwh4.inlet_1.flow_mol[t]
-            == b.split_fraction * b.outlet.flow_mol[t]
-        )
-
-    @m.fs.turbine_5.Constraint(m.fs.time)
-    def constraint_turbine5out2_pres(b, t):
-        return (
-            m.fs.fwh4.inlet_1.pressure[t] == b.outlet.pressure[t]
-        )
-
-    @m.fs.turbine_5.Constraint(m.fs.time)
-    def constraint_turbine5out2_enth(b, t):
-        return (
-            m.fs.fwh4.inlet_1.enth_mol[t] == b.outlet.enth_mol[t]
-        )
-
-    # Turbine 6 Split speration constraints
-    m.fs.turbine_6.split_fraction = pyo.Var(initialize=0.017535)
-
-    @m.fs.turbine_6.Constraint(m.fs.time)
-    def constraint_turbine6out1_flow(b, t):
-        return (
-            m.fs.turbine_7.inlet.flow_mol[t]
-            == (1 - b.split_fraction) * b.outlet.flow_mol[t]
-        )
-
-    @m.fs.turbine_6.Constraint(m.fs.time)
-    def constraint_turbine6out1_pres(b, t):
-        return (
-            m.fs.turbine_7.inlet.pressure[t] == b.outlet.pressure[t]
-        )
-
-    @m.fs.turbine_6.Constraint(m.fs.time)
-    def constraint_turbine6out1_enth(b, t):
-        return (
-            m.fs.turbine_7.inlet.enth_mol[t] == b.outlet.enth_mol[t]
-        )
-
-    @m.fs.turbine_6.Constraint(m.fs.time)
-    def constraint_turbine6out2_flow(b, t):
-        return (
-            m.fs.fwh3_mix.steam.flow_mol[t]
-            == b.split_fraction * b.outlet.flow_mol[t]
-        )
-
-    @m.fs.turbine_6.Constraint(m.fs.time)
-    def constraint_turbine6out2_pres(b, t):
-        return (
-            m.fs.fwh3_mix.steam.pressure[t] == b.outlet.pressure[t]
-        )
-
-    @m.fs.turbine_6.Constraint(m.fs.time)
-    def constraint_turbine6out2_enth(b, t):
-        return (
-            m.fs.fwh3_mix.steam.enth_mol[t] == b.outlet.enth_mol[t]
-        )
-
-    # Turbine 7 Split speration constraints
-    m.fs.turbine_7.split_fraction = pyo.Var(initialize=0.0154)
-
-    @m.fs.turbine_7.Constraint(m.fs.time)
-    def constraint_turbine7out1_flow(b, t):
-        return (
-            m.fs.turbine_8.inlet.flow_mol[t]
-            == (1 - b.split_fraction) * b.outlet.flow_mol[t]
-        )
-
-    @m.fs.turbine_7.Constraint(m.fs.time)
-    def constraint_turbine7out1_pres(b, t):
-        return (
-            m.fs.turbine_8.inlet.pressure[t] == b.outlet.pressure[t]
-        )
-
-    @m.fs.turbine_7.Constraint(m.fs.time)
-    def constraint_turbine7out1_enth(b, t):
-        return (
-            m.fs.turbine_8.inlet.enth_mol[t] == b.outlet.enth_mol[t]
-        )
-
-    @m.fs.turbine_7.Constraint(m.fs.time)
-    def constraint_turbine7out2_flow(b, t):
-        return (
-            m.fs.fwh2_mix.steam.flow_mol[t]
-            == b.split_fraction*b.outlet.flow_mol[t]
-        )
-
-    @m.fs.turbine_7.Constraint(m.fs.time)
-    def constraint_turbine7out2_pres(b, t):
-        return (
-            m.fs.fwh2_mix.steam.pressure[t] == b.outlet.pressure[t]
-        )
-
-    @m.fs.turbine_7.Constraint(m.fs.time)
-    def constraint_turbine7out2_enth(b, t):
-        return (
-            m.fs.fwh2_mix.steam.enth_mol[t] == b.outlet.enth_mol[t]
-        )
-
-    # Turbine 8 Split speration constraints
-    m.fs.turbine_8.split_fraction = pyo.Var(initialize=0.00121)
-
-    @m.fs.turbine_8.Constraint(m.fs.time)
-    def constraint_turbine8out1_flow(b, t):
-        return (
-            m.fs.turbine_9.inlet.flow_mol[t]
-            == (1 - b.split_fraction) * b.outlet.flow_mol[t]
-        )
-
-    @m.fs.turbine_8.Constraint(m.fs.time)
-    def constraint_turbine8out1_pres(b, t):
-        return (
-            m.fs.turbine_9.inlet.pressure[t] == b.outlet.pressure[t]
-        )
-
-    @m.fs.turbine_8.Constraint(m.fs.time)
-    def constraint_turbine8out1_enth(b, t):
-        return (
-            m.fs.turbine_9.inlet.enth_mol[t] == b.outlet.enth_mol[t]
-        )
-
-    @m.fs.turbine_8.Constraint(m.fs.time)
-    def constraint_turbine8out2_flow(b, t):
-        return (
-            m.fs.fwh1_mix.steam.flow_mol[t]
-            == b.split_fraction * b.outlet.flow_mol[t]
-        )
-
-    @m.fs.turbine_8.Constraint(m.fs.time)
-    def constraint_turbine8out2_pres(b, t):
-        return (
-            m.fs.fwh1_mix.steam.pressure[t] == b.outlet.pressure[t]
-        )
-
-    @m.fs.turbine_8.Constraint(m.fs.time)
-    def constraint_turbine8out2_enth(b, t):
-        return (
-            m.fs.fwh1_mix.steam.enth_mol[t] == b.outlet.enth_mol[t]
-        )
     ###########################################################################
     #  Create the stream Arcs and return the model                            #
     ###########################################################################
@@ -1109,10 +407,173 @@ def _create_arcs(m):
     m.fs.boiler_to_turb1 = Arc(
         source=m.fs.boiler.outlet, destination=m.fs.turbine_1.inlet
     )
-    # reheater to turbine
+
+    ###########################################################################
+    #  SPLITTER 1                                                             #
+    ###########################################################################
+
+    # Turbine 1 to splitter
+    m.fs.turb1_to_t1split = Arc(
+        source=m.fs.turbine_1.outlet, destination=m.fs.t1_splitter.inlet
+    )
+
+    # Splitter to turbine 2
+    m.fs.t1split_to_turb2 = Arc(
+        source=m.fs.t1_splitter.outlet_1, destination=m.fs.turbine_2.inlet
+    )
+
+    # Splitter to Feed Water Heater 8
+    m.fs.t1split_to_fwh8 = Arc(
+        source=m.fs.t1_splitter.outlet_2, destination=m.fs.fwh8.inlet_1
+    )
+
+    ###########################################################################
+    #  SPLITTER 2                                                             #
+    ###########################################################################
+
+    # Turbine 2 to splitter
+    m.fs.turb2_to_t2split = Arc(
+        source=m.fs.turbine_2.outlet, destination=m.fs.t2_splitter.inlet
+    )
+
+    # Splitter to reheater
+    m.fs.t2split_to_reheater = Arc(
+        source=m.fs.t2_splitter.outlet_1, destination=m.fs.reheater.inlet
+    )
+
+    # Splitter to Feed Water Heater Mix 7
+    m.fs.t2split_to_fwh7mix = Arc(
+        source=m.fs.t2_splitter.outlet_2, destination=m.fs.fwh7_mix.steam
+    )
+
+    # reheater to turbine 3
     m.fs.reheater_to_turb3 = Arc(
         source=m.fs.reheater.outlet, destination=m.fs.turbine_3.inlet
     )
+
+    ###########################################################################
+    #  SPLITTER 3                                                             #
+    ###########################################################################
+
+    # Turbine 3 to splitter
+    m.fs.turb3_to_t3_split = Arc(
+        source=m.fs.turbine_3.outlet, destination=m.fs.t3_splitter.inlet
+    )
+
+    # Splitter to turbine 4
+    m.fs.t3split_to_turb4 = Arc(
+        source=m.fs.t3_splitter.outlet_1, destination=m.fs.turbine_4.inlet
+    )
+
+    # Splitter to Feed Water Heater Mix 6
+    m.fs.t3split_to_fhw6mix = Arc(
+        source=m.fs.t3_splitter.outlet_2, destination=m.fs.fwh6_mix.steam
+    )
+
+    ###########################################################################
+    #  SPLITTER 4                                                             #
+    ###########################################################################
+
+    # Turbine 4 to splitter
+    m.fs.turb4_to_t4_split = Arc(
+        source=m.fs.turbine_4.outlet, destination=m.fs.t4_splitter.inlet
+    )
+
+    # Splitter to turbine 5
+    m.fs.t4split_to_turb5 = Arc(
+        source=m.fs.t4_splitter.outlet_1, destination=m.fs.turbine_5.inlet
+    )
+
+    # Splitter to deareator FWH5_da
+    m.fs.t4split_to_fhw5da = Arc(
+        source=m.fs.t4_splitter.outlet_2, destination=m.fs.fwh5_da.steam
+    )
+
+    # Splitter to bfpt
+    m.fs.t4split_to_bfpt = Arc(
+        source=m.fs.t4_splitter.outlet_3, destination=m.fs.bfpt.inlet
+    )
+
+    ###########################################################################
+    #  SPLITTER 5                                                             #
+    ###########################################################################
+
+    # Turbine 5 to splitter
+    m.fs.turb5_to_t5_split = Arc(
+        source=m.fs.turbine_5.outlet, destination=m.fs.t5_splitter.inlet
+    )
+
+    # Splitter to turbine 6
+    m.fs.t5split_to_turb6 = Arc(
+        source=m.fs.t5_splitter.outlet_1, destination=m.fs.turbine_6.inlet
+    )
+
+    # Splitter to Feed Water Heater 4
+    m.fs.t5split_to_fwh4 = Arc(
+        source=m.fs.t5_splitter.outlet_2, destination=m.fs.fwh4.inlet_1
+    )
+
+    ###########################################################################
+    #  SPLITTER 6                                                             #
+    ###########################################################################
+   
+    # Turbine 6 to splitter
+    m.fs.turb6_to_t6_split = Arc(
+        source=m.fs.turbine_6.outlet, destination=m.fs.t6_splitter.inlet
+    )
+
+    # Splitter to turbine 7
+    m.fs.t6split_to_turb7 = Arc(
+        source=m.fs.t6_splitter.outlet_1, destination=m.fs.turbine_7.inlet
+    )
+
+    # Splitter to Feed Water Heater Mixer 3
+    m.fs.t6split_to_fwh3mix = Arc(
+        source=m.fs.t6_splitter.outlet_2, destination=m.fs.fwh3_mix.steam
+    )
+
+    ###########################################################################
+    #  SPLITTER 7                                                             #
+    ###########################################################################
+   
+    # Turbine 7 to splitter
+    m.fs.turb7_to_t7_split = Arc(
+        source=m.fs.turbine_7.outlet, destination=m.fs.t7_splitter.inlet
+    )
+
+    # Splitter to turbine 8
+    m.fs.t7split_to_turb8 = Arc(
+        source=m.fs.t7_splitter.outlet_1, destination=m.fs.turbine_8.inlet
+    )
+
+    # Splitter to Feed Water Heater Mixer 2
+    m.fs.t7split_to_fwh2mix = Arc(
+        source=m.fs.t7_splitter.outlet_2, destination=m.fs.fwh2_mix.steam
+    )
+
+    ###########################################################################
+    #  SPLITTER 8                                                             #
+    ###########################################################################
+   
+    # Turbine 8 to splitter
+    m.fs.turb8_to_t8_split = Arc(
+        source=m.fs.turbine_8.outlet, destination=m.fs.t8_splitter.inlet
+    )
+
+    # Splitter to turbine 9
+    m.fs.t8split_to_turb9 = Arc(
+        source=m.fs.t8_splitter.outlet_1, destination=m.fs.turbine_9.inlet
+    )
+
+    # Splitter to Feed Water Heater Mixer 1
+    m.fs.t8split_to_fwh1mix = Arc(
+        source=m.fs.t8_splitter.outlet_2, destination=m.fs.fwh1_mix.steam
+    )
+
+    ###########################################################################
+    #                                                               #
+    ###########################################################################
+
     m.fs.turb_to_cmix = Arc(
         source=m.fs.turbine_9.outlet, destination=m.fs.condenser_mix.main
     )
@@ -1282,7 +743,8 @@ def set_model_input(m):
     # is not constrained by the saturated liquid constraint. Thus, the flow
     # to the deaerator is fixed in this model. The value of this split fraction
     # is again based on the baseline results
-    m.fs.turbine_4.split_fraction2.fix(0.050331)
+
+    m.fs.t4_splitter.split_fraction[:, "outlet_2"].fix(0.050331)
 
     m.fs.bfp.efficiency_pump.fix(0.80)
     # BFW Pump pressure is assumed to be 15% more than
@@ -1329,14 +791,15 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
     # for steam extractions for all the feed water heaters except deaerator
     # These split fractions will be unfixed later and the constraints will
     # be activated
-    m.fs.turbine_1.split_fraction.fix(0.12812)
-    m.fs.turbine_2.split_fraction.fix(0.061824)
-    m.fs.turbine_3.split_fraction.fix(0.03815)
-    m.fs.turbine_4.split_fraction1.fix(0.9019)
-    m.fs.turbine_5.split_fraction.fix(0.0381443)
-    m.fs.turbine_6.split_fraction.fix(0.017535)
-    m.fs.turbine_7.split_fraction.fix(0.0154)
-    m.fs.turbine_8.split_fraction.fix(0.00121)
+
+    m.fs.t1_splitter.split_fraction[:, "outlet_2"].fix(0.12812)
+    m.fs.t2_splitter.split_fraction[:, "outlet_2"].fix(0.061824)
+    m.fs.t3_splitter.split_fraction[:, "outlet_2"].fix(0.03815)
+    m.fs.t4_splitter.split_fraction[:, "outlet_1"].fix(0.9019)
+    m.fs.t5_splitter.split_fraction[:, "outlet_2"].fix(0.0381443)
+    m.fs.t6_splitter.split_fraction[:, "outlet_2"].fix(0.017535)
+    m.fs.t7_splitter.split_fraction[:, "outlet_2"].fix(0.0154)
+    m.fs.t8_splitter.split_fraction[:, "outlet_2"].fix(0.00121)
 
     m.fs.constraint_out_pressure.deactivate()
     m.fs.fwh1.fwh1_vaporfrac_constraint.deactivate()
@@ -1347,162 +810,64 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
     m.fs.fwh7.fwh7_vaporfrac_constraint.deactivate()
     m.fs.fwh8.fwh8_vaporfrac_constraint.deactivate()
 
-    # solving the turbine
+    # solving the turbines and splitters
     _set_port(m.fs.turbine_1.inlet,  m.fs.boiler.outlet)
-    m.fs.turbine_1.constraint_turbine1out1_flow.deactivate()
-    m.fs.turbine_1.constraint_turbine1out1_pres.deactivate()
-    m.fs.turbine_1.constraint_turbine1out1_enth.deactivate()
-    m.fs.turbine_1.constraint_turbine1out2_flow.deactivate()
-    m.fs.turbine_1.constraint_turbine1out2_pres.deactivate()
-    m.fs.turbine_1.constraint_turbine1out2_enth.deactivate()
     m.fs.turbine_1.initialize(outlvl=outlvl, optarg=solver.options)
-    m.fs.turbine_1.constraint_turbine1out1_flow.activate()
-    m.fs.turbine_1.constraint_turbine1out1_pres.activate()
-    m.fs.turbine_1.constraint_turbine1out1_enth.activate()
-    m.fs.turbine_1.constraint_turbine1out2_flow.activate()
-    m.fs.turbine_1.constraint_turbine1out2_pres.activate()
-    m.fs.turbine_1.constraint_turbine1out2_enth.activate()
 
-    m.fs.turbine_2.constraint_turbine2out1_flow.deactivate()
-    m.fs.turbine_2.constraint_turbine2out1_pres.deactivate()
-    m.fs.turbine_2.constraint_turbine2out1_enth.deactivate()
-    m.fs.turbine_2.constraint_turbine2out2_flow.deactivate()
-    m.fs.turbine_2.constraint_turbine2out2_pres.deactivate()
-    m.fs.turbine_2.constraint_turbine2out2_enth.deactivate()
-    m.fs.turbine_2.inlet.flow_mol[:].value = 25381
-    m.fs.turbine_2.inlet.pressure[:].value = 7941352
-    m.fs.turbine_2.inlet.enth_mol[:].value = 56933
+    _set_port(m.fs.t1_splitter.inlet,  m.fs.turbine_1.outlet)
+    m.fs.t1_splitter.initialize(outlvl=outlvl, optarg=solver.options)
+
+    _set_port(m.fs.turbine_2.inlet, m.fs.t1_splitter.outlet_1)
     m.fs.turbine_2.initialize(outlvl=outlvl, optarg=solver.options)
-    m.fs.turbine_2.constraint_turbine2out2_flow.activate()
-    m.fs.turbine_2.constraint_turbine2out2_pres.activate()
-    m.fs.turbine_2.constraint_turbine2out2_enth.activate()
 
-    m.fs.reheater.inlet.flow_mol[:].value = 23812
-    m.fs.reheater.inlet.pressure[:].value = 5082465
-    m.fs.reheater.inlet.enth_mol[:].value = 54963
+    _set_port(m.fs.t2_splitter.inlet, m.fs.turbine_2.outlet)
+    m.fs.t2_splitter.initialize(outlvl=outlvl, optarg=solver.options)
+
+    _set_port(m.fs.reheater.inlet, m.fs.t2_splitter.outlet_1)
     m.fs.reheater.initialize(outlvl=outlvl, optarg=solver.options)
-    m.fs.turbine_2.constraint_turbine2out1_flow.activate()
-    m.fs.turbine_2.constraint_turbine2out1_pres.activate()
-    m.fs.turbine_2.constraint_turbine2out1_enth.activate()
 
-    # Eenrgy storage splitter outlet 2: Turbine train (Turb 3)
     _set_port(m.fs.turbine_3.inlet, m.fs.reheater.outlet)
-    m.fs.turbine_3.constraint_turbine3out1_flow.deactivate()
-    m.fs.turbine_3.constraint_turbine3out1_pres.deactivate()
-    m.fs.turbine_3.constraint_turbine3out1_enth.deactivate()
-    m.fs.turbine_3.constraint_turbine3out2_flow.deactivate()
-    m.fs.turbine_3.constraint_turbine3out2_pres.deactivate()
-    m.fs.turbine_3.constraint_turbine3out2_enth.deactivate()
     m.fs.turbine_3.initialize(outlvl=outlvl, optarg=solver.options)
-    m.fs.turbine_3.constraint_turbine3out1_flow.activate()
-    m.fs.turbine_3.constraint_turbine3out1_pres.activate()
-    m.fs.turbine_3.constraint_turbine3out1_enth.activate()
-    m.fs.turbine_3.constraint_turbine3out2_flow.activate()
-    m.fs.turbine_3.constraint_turbine3out2_pres.activate()
-    m.fs.turbine_3.constraint_turbine3out2_enth.activate()
 
-    m.fs.turbine_4.constraint_turbine4out1_flow.deactivate()
-    m.fs.turbine_4.constraint_turbine4out1_pres.deactivate()
-    m.fs.turbine_4.constraint_turbine4out1_enth.deactivate()
-    m.fs.turbine_4.constraint_turbine4out2_flow.deactivate()
-    m.fs.turbine_4.constraint_turbine4out2_pres.deactivate()
-    m.fs.turbine_4.constraint_turbine4out2_enth.deactivate()
-    m.fs.turbine_4.constraint_turbine4out3_flow.deactivate()
-    m.fs.turbine_4.constraint_turbine4out3_pres.deactivate()
-    m.fs.turbine_4.constraint_turbine4out3_enth.deactivate()
-    m.fs.turbine_4.inlet.flow_mol[:].value = 22904
-    m.fs.turbine_4.inlet.pressure[:].value = 1942027
-    m.fs.turbine_4.inlet.enth_mol[:].value = 60341
+    _set_port(m.fs.t3_splitter.inlet, m.fs.turbine_3.outlet)
+    m.fs.t3_splitter.initialize(outlvl=outlvl, optarg=solver.options)
+
+    _set_port(m.fs.turbine_4.inlet, m.fs.t3_splitter.outlet_1)
     m.fs.turbine_4.initialize(outlvl=outlvl, optarg=solver.options)
-    m.fs.turbine_4.constraint_turbine4out1_flow.activate()
-    m.fs.turbine_4.constraint_turbine4out1_pres.activate()
-    m.fs.turbine_4.constraint_turbine4out1_enth.activate()
-    m.fs.turbine_4.constraint_turbine4out2_flow.activate()
-    m.fs.turbine_4.constraint_turbine4out2_pres.activate()
-    m.fs.turbine_4.constraint_turbine4out2_enth.activate()
-    m.fs.turbine_4.constraint_turbine4out3_flow.activate()
-    m.fs.turbine_4.constraint_turbine4out3_pres.activate()
-    m.fs.turbine_4.constraint_turbine4out3_enth.activate()
 
-    m.fs.turbine_5.constraint_turbine5out1_flow.deactivate()
-    m.fs.turbine_5.constraint_turbine5out1_pres.deactivate()
-    m.fs.turbine_5.constraint_turbine5out1_enth.deactivate()
-    m.fs.turbine_5.constraint_turbine5out2_flow.deactivate()
-    m.fs.turbine_5.constraint_turbine5out2_pres.deactivate()
-    m.fs.turbine_5.constraint_turbine5out2_enth.deactivate()
-    m.fs.turbine_5.inlet.flow_mol[:].value = 20656
-    m.fs.turbine_5.inlet.pressure[:].value = 472082
-    m.fs.turbine_5.inlet.enth_mol[:].value = 53882
+    _set_port(m.fs.t4_splitter.inlet, m.fs.turbine_4.outlet)
+    m.fs.t4_splitter.initialize(outlvl=outlvl, optarg=solver.options)
+
+    _set_port(m.fs.turbine_5.inlet, m.fs.t4_splitter.outlet_1)
     m.fs.turbine_5.initialize(outlvl=outlvl, optarg=solver.options)
-    m.fs.turbine_5.constraint_turbine5out1_flow.activate()
-    m.fs.turbine_5.constraint_turbine5out1_pres.activate()
-    m.fs.turbine_5.constraint_turbine5out1_enth.activate()
-    m.fs.turbine_5.constraint_turbine5out2_flow.activate()
-    m.fs.turbine_5.constraint_turbine5out2_pres.activate()
-    m.fs.turbine_5.constraint_turbine5out2_enth.activate()
 
-    m.fs.turbine_6.constraint_turbine6out1_flow.deactivate()
-    m.fs.turbine_6.constraint_turbine6out1_pres.deactivate()
-    m.fs.turbine_6.constraint_turbine6out1_enth.deactivate()
-    m.fs.turbine_6.constraint_turbine6out2_flow.deactivate()
-    m.fs.turbine_6.constraint_turbine6out2_pres.deactivate()
-    m.fs.turbine_6.constraint_turbine6out2_enth.deactivate()
-    m.fs.turbine_6.inlet.flow_mol[:].value = 19868
-    m.fs.turbine_6.inlet.pressure[:].value = 193365
-    m.fs.turbine_6.inlet.enth_mol[:].value = 50728
+    _set_port(m.fs.t5_splitter.inlet, m.fs.turbine_5.outlet)
+    m.fs.t5_splitter.initialize(outlvl=outlvl, optarg=solver.options)
+
+    _set_port(m.fs.turbine_6.inlet, m.fs.t5_splitter.outlet_1)
     m.fs.turbine_6.initialize(outlvl=outlvl, optarg=solver.options)
-    m.fs.turbine_6.constraint_turbine6out1_flow.activate()
-    m.fs.turbine_6.constraint_turbine6out1_pres.activate()
-    m.fs.turbine_6.constraint_turbine6out1_enth.activate()
-    m.fs.turbine_6.constraint_turbine6out2_flow.activate()
-    m.fs.turbine_6.constraint_turbine6out2_pres.activate()
-    m.fs.turbine_6.constraint_turbine6out2_enth.activate()
 
-    m.fs.turbine_7.constraint_turbine7out1_flow.deactivate()
-    m.fs.turbine_7.constraint_turbine7out1_pres.deactivate()
-    m.fs.turbine_7.constraint_turbine7out1_enth.deactivate()
-    m.fs.turbine_7.constraint_turbine7out2_flow.deactivate()
-    m.fs.turbine_7.constraint_turbine7out2_pres.deactivate()
-    m.fs.turbine_7.constraint_turbine7out2_enth.deactivate()
-    m.fs.turbine_7.inlet.flow_mol[:].value = 19520
-    m.fs.turbine_7.inlet.pressure[:].value = 79202
-    m.fs.turbine_7.inlet.enth_mol[:].value = 48110
+    _set_port(m.fs.t6_splitter.inlet, m.fs.turbine_6.outlet)
+    m.fs.t6_splitter.initialize(outlvl=outlvl, optarg=solver.options)
+
+    _set_port(m.fs.turbine_7.inlet, m.fs.t6_splitter.outlet_1)
     m.fs.turbine_7.initialize(outlvl=outlvl, optarg=solver.options)
-    m.fs.turbine_7.constraint_turbine7out1_flow.activate()
-    m.fs.turbine_7.constraint_turbine7out1_pres.activate()
-    m.fs.turbine_7.constraint_turbine7out1_enth.activate()
-    m.fs.turbine_7.constraint_turbine7out2_flow.activate()
-    m.fs.turbine_7.constraint_turbine7out2_pres.activate()
-    m.fs.turbine_7.constraint_turbine7out2_enth.activate()
 
-    m.fs.turbine_8.constraint_turbine8out1_flow.deactivate()
-    m.fs.turbine_8.constraint_turbine8out1_pres.deactivate()
-    m.fs.turbine_8.constraint_turbine8out1_enth.deactivate()
-    m.fs.turbine_8.constraint_turbine8out2_flow.deactivate()
-    m.fs.turbine_8.constraint_turbine8out2_pres.deactivate()
-    m.fs.turbine_8.constraint_turbine8out2_enth.deactivate()
-    m.fs.turbine_8.inlet.flow_mol[:].value = 19219
-    m.fs.turbine_8.inlet.pressure[:].value = 32441
-    m.fs.turbine_8.inlet.enth_mol[:].value = 45836
+    _set_port(m.fs.t7_splitter.inlet, m.fs.turbine_7.outlet)
+    m.fs.t7_splitter.initialize(outlvl=outlvl, optarg=solver.options)
+
+    _set_port(m.fs.turbine_8.inlet, m.fs.t7_splitter.outlet_1)
     m.fs.turbine_8.initialize(outlvl=outlvl, optarg=solver.options)
-    m.fs.turbine_8.constraint_turbine8out1_flow.activate()
-    m.fs.turbine_8.constraint_turbine8out1_pres.activate()
-    m.fs.turbine_8.constraint_turbine8out1_enth.activate()
-    m.fs.turbine_8.constraint_turbine8out2_flow.activate()
-    m.fs.turbine_8.constraint_turbine8out2_pres.activate()
-    m.fs.turbine_8.constraint_turbine8out2_enth.activate()
 
-    m.fs.turbine_9.inlet.flow_mol[:].value = 19196
-    m.fs.turbine_9.inlet.pressure[:].value = 13288
-    m.fs.turbine_9.inlet.enth_mol[:].value = 43763
+    _set_port(m.fs.t8_splitter.inlet, m.fs.turbine_8.outlet)
+    m.fs.t8_splitter.initialize(outlvl=outlvl, optarg=solver.options)
+
+    _set_port(m.fs.turbine_9.inlet, m.fs.t8_splitter.outlet_1)
     m.fs.turbine_9.initialize(outlvl=outlvl, optarg=solver.options)
 
     # initialize the boiler feed pump turbine.
-    m.fs.bfpt.inlet.flow_mol.fix(1095)
-    m.fs.bfpt.inlet.pressure.fix(472082)
-    m.fs.bfpt.inlet.enth_mol.fix(53882)
+    _set_port(m.fs.bfpt.inlet, m.fs.t4_splitter.outlet_3)
     m.fs.bfpt.initialize(outlvl=outlvl, optarg=solver.options)
-    m.fs.bfpt.inlet.unfix()
 
     ###########################################################################
     #  Condenser                                                #
@@ -1529,12 +894,10 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
     m.fs.fwh1_mix.drain.flow_mol.fix(1434)
     m.fs.fwh1_mix.drain.pressure.fix(14617)
     m.fs.fwh1_mix.drain.enth_mol.fix(3990)
-    m.fs.fwh1_mix.steam.flow_mol.fix(23)
-    m.fs.fwh1_mix.steam.pressure.fix(13288)
-    m.fs.fwh1_mix.steam.enth_mol.fix(43763)
+
+    _set_port(m.fs.fwh1_mix.steam, m.fs.t8_splitter.outlet_2)
     m.fs.fwh1_mix.initialize(outlvl=outlvl, optarg=solver.options)
     m.fs.fwh1_mix.drain.unfix()
-    m.fs.fwh1_mix.steam.unfix()
 
     _set_port(m.fs.fwh1.inlet_1, m.fs.fwh1_mix.outlet)
     _set_port(m.fs.fwh1.inlet_2, m.fs.cond_pump.outlet)
@@ -1544,9 +907,7 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
     m.fs.fwh2_mix.drain.flow_mol.fix(1136)
     m.fs.fwh2_mix.drain.pressure.fix(35685)
     m.fs.fwh2_mix.drain.enth_mol.fix(5462)
-    m.fs.fwh2_mix.steam.flow_mol.fix(300)
-    m.fs.fwh2_mix.steam.pressure.fix(32441)
-    m.fs.fwh2_mix.steam.enth_mol.fix(45836)
+    _set_port(m.fs.fwh2_mix.steam, m.fs.t7_splitter.outlet_2)
     m.fs.fwh2_mix.initialize(outlvl=outlvl, optarg=solver.options)
     m.fs.fwh2_mix.drain.unfix()
     m.fs.fwh2_mix.steam.unfix()
@@ -1559,12 +920,10 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
     m.fs.fwh3_mix.drain.flow_mol.fix(788)
     m.fs.fwh3_mix.drain.pressure.fix(87123)
     m.fs.fwh3_mix.drain.enth_mol.fix(7160)
-    m.fs.fwh3_mix.steam.flow_mol.fix(348)
-    m.fs.fwh3_mix.steam.pressure.fix(79202)
-    m.fs.fwh3_mix.steam.enth_mol.fix(48110)
+    _set_port(m.fs.fwh3_mix.steam, m.fs.t6_splitter.outlet_2)
     m.fs.fwh3_mix.initialize(outlvl=outlvl, optarg=solver.options)
     m.fs.fwh3_mix.drain.unfix()
-    m.fs.fwh3_mix.steam.unfix()
+    # m.fs.fwh3_mix.steam.unfix()
 
     _set_port(m.fs.fwh3.inlet_1, m.fs.fwh3_mix.outlet)
     _set_port(m.fs.fwh3.inlet_2, m.fs.fwh2.outlet_2)
@@ -1572,11 +931,8 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
 
     # fwh4
     _set_port(m.fs.fwh4.inlet_2, m.fs.fwh3.outlet_2)
-    m.fs.fwh4.inlet_1.flow_mol.fix(788)
-    m.fs.fwh4.inlet_1.pressure.fix(193365)
-    m.fs.fwh4.inlet_1.enth_mol.fix(50728)
+    _set_port(m.fs.fwh4.inlet_1, m.fs.t5_splitter.outlet_2)
     m.fs.fwh4.initialize(outlvl=outlvl, optarg=solver.options)
-    m.fs.fwh4.inlet_1.unfix()
 
     ###########################################################################
     #  boiler feed pump and deaerator                                         #
@@ -1586,12 +942,11 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
     m.fs.fwh5_da.drain.flow_mol[:].fix(6207)
     m.fs.fwh5_da.drain.pressure[:].fix(519291)
     m.fs.fwh5_da.drain.enth_mol[:].fix(11526)
-    m.fs.fwh5_da.steam.flow_mol.fix(1153)
-    m.fs.fwh5_da.steam.pressure.fix(472082)
-    m.fs.fwh5_da.steam.enth_mol.fix(53882)
+
+    _set_port(m.fs.fwh5_da.steam, m.fs.t4_splitter.outlet_2)
     m.fs.fwh5_da.initialize(outlvl=outlvl, optarg=solver.options)
     m.fs.fwh5_da.drain.unfix()
-    m.fs.fwh5_da.steam.unfix()
+
     # Boiler feed pump
     _set_port(m.fs.bfp.inlet, m.fs.fwh5_da.outlet)
     m.fs.bfp.initialize(outlvl=outlvl, optarg=solver.options)
@@ -1602,27 +957,22 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
     m.fs.fwh6_mix.drain.flow_mol.fix(5299)
     m.fs.fwh6_mix.drain.pressure.fix(2177587)
     m.fs.fwh6_mix.drain.enth_mol.fix(16559)
-    m.fs.fwh6_mix.steam.flow_mol.fix(908)
-    m.fs.fwh6_mix.steam.pressure.fix(1942027)
-    m.fs.fwh6_mix.steam.enth_mol.fix(60341)
+    _set_port(m.fs.fwh6_mix.steam, m.fs.t3_splitter.outlet_2)
     m.fs.fwh6_mix.initialize(outlvl=outlvl, optarg=solver.options)
     m.fs.fwh6_mix.drain.unfix()
-    m.fs.fwh6_mix.steam.unfix()
 
     _set_port(m.fs.fwh6.inlet_1, m.fs.fwh6_mix.outlet)
     _set_port(m.fs.fwh6.inlet_2, m.fs.bfp.outlet)
     m.fs.fwh6.initialize(outlvl=outlvl, optarg=solver.options)
 
     # fwh7
+    _set_port(m.fs.fwh7_mix.steam, m.fs.t2_splitter.outlet_2)
     m.fs.fwh7_mix.drain.flow_mol.fix(3730)
     m.fs.fwh7_mix.drain.pressure.fix(5590711)
     m.fs.fwh7_mix.drain.enth_mol.fix(21232)
-    m.fs.fwh7_mix.steam.flow_mol.fix(1569)
-    m.fs.fwh7_mix.steam.pressure.fix(5082465)
-    m.fs.fwh7_mix.steam.enth_mol.fix(54963)
+
     m.fs.fwh7_mix.initialize(outlvl=outlvl, optarg=solver.options)
     m.fs.fwh7_mix.drain.unfix()
-    m.fs.fwh7_mix.steam.unfix()
 
     _set_port(m.fs.fwh7.inlet_1, m.fs.fwh7_mix.outlet)
     _set_port(m.fs.fwh7.inlet_2, m.fs.fwh6.outlet_2)
@@ -1630,9 +980,7 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
 
     # fwh8
     _set_port(m.fs.fwh8.inlet_2, m.fs.fwh7.outlet_2)
-    m.fs.fwh8.inlet_1.flow_mol.fix(3730)
-    m.fs.fwh8.inlet_1.pressure.fix(7941351)
-    m.fs.fwh8.inlet_1.enth_mol.fix(56933)
+    _set_port(m.fs.fwh8.inlet_1, m.fs.t1_splitter.outlet_2)
     m.fs.fwh8.initialize(outlvl=outlvl, optarg=solver.options)
     m.fs.fwh8.inlet_1.unfix()
 
@@ -1643,14 +991,16 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
     #  Vaporfrac constraints set condensed steam enthalpy at the condensing
     #  side outlet to be that of a saturated liquid
     # Then solve the square problem again for an initilized model
-    m.fs.turbine_1.split_fraction.unfix()
-    m.fs.turbine_2.split_fraction.unfix()
-    m.fs.turbine_3.split_fraction.unfix()
-    m.fs.turbine_4.split_fraction1.unfix()
-    m.fs.turbine_5.split_fraction.unfix()
-    m.fs.turbine_6.split_fraction.unfix()
-    m.fs.turbine_7.split_fraction.unfix()
-    m.fs.turbine_8.split_fraction.unfix()
+    # m.fs.turbine_1.split_fraction.unfix()
+    m.fs.t1_splitter.split_fraction[:, "outlet_2"].unfix()
+    m.fs.t2_splitter.split_fraction[:, "outlet_2"].unfix()
+    m.fs.t3_splitter.split_fraction[:, "outlet_2"].unfix()
+    m.fs.t4_splitter.split_fraction[:, "outlet_1"].unfix()
+    m.fs.t5_splitter.split_fraction[:, "outlet_2"].unfix()
+    m.fs.t6_splitter.split_fraction[:, "outlet_2"].unfix()
+    m.fs.t7_splitter.split_fraction[:, "outlet_2"].unfix()
+    m.fs.t8_splitter.split_fraction[:, "outlet_2"].unfix()
+
     m.fs.constraint_out_pressure.activate()
 
     m.fs.fwh1.fwh1_vaporfrac_constraint.activate()
@@ -1661,7 +1011,7 @@ def initialize(m, fileinput=None, outlvl=idaeslog.NOTSET):
     m.fs.fwh7.fwh7_vaporfrac_constraint.activate()
     m.fs.fwh8.fwh8_vaporfrac_constraint.activate()
 
-    res = solver.solve(m)
+    res = solver.solve(m, tee=True)
     print("Model Initialization = ",
           res.solver.termination_condition)
     print("*********************Model Initialized**************************")
@@ -1741,3 +1091,5 @@ if __name__ == "__main__":
     # User can import the model from build_plant_model for analysis
     # A sample analysis function is called below
     model_analysis(m)
+
+    # m.fs.fwh7.pprint()
