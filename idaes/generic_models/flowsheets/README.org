@@ -1,0 +1,217 @@
+#+TITLE: Supercritical Pulverized Coal Power Plant: Simulation using IDAES Framework
+
+
+This is a simple power plant model for supercritical coal-fired power plant
+This model uses some of the generic unit models in place of complex
+power generation unit models such as multi-stage turbine and 0D FWH.
+For example, this model uses multiple pressure changers to
+model multi-stage turbine and 0D heat exchangers to model feed water heaters.
+Some of the parameters in the model such as feed water heater areas,
+overall heat transfer coefficient, turbine efficiencies at multiple stages
+have all been estimated in order to closely match with the data in
+NETL baseline report.
+Additional assumptions include using Heater blocks to model main steam boiler,
+reheater, and condenser. Also, the throttle valves at turbine inlet are
+not included in this model.
+The model has 3 degrees of freedom to be specified by the user. These are the
+conditions for main steam: Pressure (Pa), Temperature (K), and Flow (mol/s).
+The default values fixed in the model are from the NETL Baseline report rev4.
+
+
+
+* Introduction
+Paragraph 1. Description of the supercritical plant and the units 
+from IDAES framework that will be used.
+
+Include figure of the flowsheet.
+
+Paragraph 2. Description of the units and their connection(s) in the 
+flowsheet (IDAES arcs).
+
+
+* Case Study 
+Paragraph 1. Description of the case study.
+
+Include table with the data used in the example:
+| Variable | Value |
+|----------+-------|
+|          |       |
+|----------+-------|
+
+
+** Assumptions
+Paragraph 1. These assumptions are coming from the commented areas 
+in the model.
+
+From create model:
+Condenser mixer:
+The outlet pressure of condenser mixer is equal to the minimum pressure
+Since the turbine (#9) outlet (or, mixer inlet 'main') pressure
+has the minimum pressure, the following constraint sets the outlet
+pressure of the condenser mixer to the pressure of the inlet 'main'
+From condenser:
+The condenser is set up as a heater block
+The outlet of condenser is assumed to be a saturated liquid
+The following condensate enthalpy at the outlet of condeser equal to
+that of a saturated liquid at that pressure
+
+FWHs:
+Feed water heaters (FWHs) are declared as 0D heat exchangers
+Tube side is for feed water & Shell side is for steam condensing
+Pressure drop on both sides are accounted for by setting the respective
+outlet pressure based on the following assumptions:
+    (1) Feed water side: A constant 4% pressure drop is assumed
+          on the feedwater side for all FWHs. For this,
+          the outlet pressure is set to 0.96 times the inlet pressure,
+          on the feed water side for all FWHs
+    (2) Steam condensing side: Going from high pressure to
+          low pressure FWHs, the outlet pressure of
+          the condensed steam in assumed to be 10% more than that
+          of the pressure of steam extracted for the immediately
+          next lower pressure feedwater heater.
+          e.g. the outlet condensate pressure of FWH 'n'
+          = 1.1 * pressure of steam extracted for FWH 'n-1'
+          In case of FWH1 the FWH 'n-1' is used for Condenser,
+          and in case of FWH6, FWH 'n-1' is for Deaerator. Here,
+          the steam pressure for FWH 'n-1' is known because the
+          pressure ratios for turbines are fixed.
+The condensing steam is assumed to leave the FWH as saturated liquid
+Thus, each FWH is accompanied by 3 constraints, 2 for pressure drop
+and 1 for the enthalpy.
+
+Scaling factors for area and overall heat transfer coefficients for
+FWHs have all been set appropriately (user may change these values,
+if needed) if not set, the scaling factors = 1 (IDAES default)
+
+FWH1 mixer:
+The outlet pressure of FWH1 mixer is equal to the minimum pressure
+Since the pressure of mixer inlet 'steam' has the minimum pressure,
+the following constraint sets the outlet pressure of FWH1 to be same
+as the pressure of the inlet 'steam'
+
+FWH1:
+Setting the outlet enthalpy of condensate to be same as saturated liquid
+Setting the outlet pressure of condensate to be 10% more than that of
+steam routed to condenser, as described in FWH description
+0.5 is the pressure ratio for turbine #9 (see set_inputs)
+Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
+
+FWH2 mixer:
+The outlet pressure of FWH2 mixer is equal to the minimum pressure
+Since the pressure of mixer inlet 'steam' has the minimum pressure,
+the following constraint sets the outlet pressure of FWH2 to be same
+as the pressure of the inlet 'steam'
+
+FWH2:
+Setting the outlet enthalpy of condensate to be same as saturated liquid
+Setting the outlet pressure of condensate to be 10% more than that of
+steam extracted for FWH1, as described in FWH description
+0.64^2 is the pressure ratio for turbine #8 (see set_inputs)
+Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
+
+FWH3 mixer:
+The outlet pressure of FWH3 mixer is equal to the minimum pressure
+Since the pressure of mixer inlet 'steam' has the minimum pressure,
+the following constraint sets the outlet pressure of FWH3 to be same
+as the pressure of the inlet 'steam'
+
+FWH3:
+Setting the outlet enthalpy of condensate to be same as saturated liquid
+Setting the outlet pressure of condensate to be 10% more than that of
+steam extracted for FWH2, as described in FWH description
+0.64^2 is the pressure ratio for turbine #7 (see set_inputs)
+Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
+
+FWH4:
+Setting the outlet enthalpy of condensate to be same as saturated liquid
+Setting the outlet pressure of condensate to be 10% more than that of
+steam extracted for FWH3, as described in FWH description
+0.64^2 is the pressure ratio for turbine #6 (see set_inputs)
+Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
+
+Deaerator, bfp, and bfpt:
+The outlet pressure of deaerator is equal to the minimum pressure
+Since the pressure of deaerator inlet 'feedwater' has
+the minimum pressure, the following constraint sets the outlet pressure
+of deaerator to be same as the pressure of the inlet 'feedwater'
+The following constraint sets the outlet pressure of steam extracted
+for boiler feed water turbine to be same as that of condenser
+The following constraint demands that the work done by the
+boiler feed water pump is same as that of boiler feed water turbine
+Essentially, this says that boiler feed water turbine produces just
+enough power to meet the demand of boiler feed water pump
+
+FWH6 mixer:
+The outlet pressure of FWH6 mixer is equal to the minimum pressure
+Since the pressure of mixer inlet 'steam' has the minimum pressure,
+the following constraint sets the outlet pressure of FWH6 to be same
+as the pressure of the inlet 'steam'
+
+FWH6:
+Setting the outlet enthalpy of condensate to be same as saturated liquid
+Setting the outlet pressure of condensate to be 10% more than that of
+steam extracted for Deaerator, as described in FWH description
+0.79^6 is the pressure ratio for turbine #4 (see set_inputs)
+Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
+
+FWH7 mixer:
+The outlet pressure of FWH7 mixer is equal to the minimum pressure
+Since the pressure of mixer inlet 'steam' has the minimum pressure,
+the following constraint sets the outlet pressure of FWH7 to be same
+as the pressure of the inlet 'steam'
+
+FWH7:
+Setting the outlet enthalpy of condensate to be same as saturated liquid
+Setting the outlet pressure of condensate to be 10% more than that of
+steam extracted for FWH6, as described in FWH description
+0.79^4 is the pressure ratio for turbine #3 (see set_inputs)
+Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
+
+FWH8:
+Setting the outlet enthalpy of condensate to be same as saturated liquid
+Setting the outlet pressure of condensate to be 10% more than that of
+steam extracted for FWH7, as described in FWH description
+0.8^2 is the pressure ratio for turbine #2 (see set_inputs)
+Setting a 4% pressure drop on the feedwater side (P_out = 0.96 * P_in)
+
+From set_model_input:
+Model inputs / fixed variable or parameter values
+assumed in this block, unless otherwise stated explicitly,
+are either assumed or estimated in order to match the results with
+known baseline scenario for supercritical steam cycle
+These inputs will also fix all necessary inputs to the model
+i.e. the degrees of freedom = 0
+
+Deaerator:
+Unlike the feedwater heaters the steam extraction flow to the deaerator
+is not constrained by the saturated liquid constraint. Thus, the flow
+to the deaerator is fixed in this model. The value of this split fraction
+is again based on the baseline results
+
+BFW:
+BFW Pump pressure is assumed to be 15% more than
+the desired main steam (Turbine Inlet) pressure
+To account for the pressure drop across Feed water heaters and Boiler
+
+From initialize:
+initialization routine for the turbine train
+
+Deactivating constraints that fix enthalpy at FWH outlet
+This lets us initialize the model using the fixed split_fractions
+for steam extractions for all the feed water heaters except deaerator
+These split fractions will be unfixed later and the constraints will
+be activated
+
+Model Initialization with Square Problem Solve                         #
+
+Unfix split fractions and activate vapor fraction constraints
+Vaporfrac constraints set condensed steam enthalpy at the condensing
+side outlet to be that of a saturated liquid
+Then solve the square problem again for an initilized model
+
+
+* Results
+Paragraph 1. Short explanation of the results.
+
+Include pfd with all the results.
+
